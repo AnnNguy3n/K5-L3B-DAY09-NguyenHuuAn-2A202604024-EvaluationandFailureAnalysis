@@ -7,6 +7,9 @@ Reference values to self-check are in tests/test_lab9_stats.py.
 
 from __future__ import annotations
 
+import numpy as np
+from scipy.stats import bootstrap
+
 from collections.abc import Sequence
 
 POS = "FAIL"   # the judge's job is to FIND failures, so FAIL is the positive class
@@ -101,13 +104,60 @@ def rogan_gladen(
     return min(1.0, max(0.0, corrected))
 
 
-def paired_bootstrap(a: Sequence[float], b: Sequence[float], *, n_resamples: int = 1000,
-                     rng: int = 2027, confidence: float = 0.95) -> tuple[float, float, float]:
-    """a[i], b[i] = per-item mean over seeds, SAME items, SAME order.
-    Return (mean(a)-mean(b), lo, hi) with scipy.stats.bootstrap(paired=True, method="percentile",
-    rng=numpy.random.default_rng(rng)). If a == b everywhere return (0.0, 0.0, 0.0)."""
-    # TODO M4
-    raise NotImplementedError
+def paired_bootstrap(
+    a: Sequence[float],
+    b: Sequence[float],
+    *,
+    n_resamples: int = 1000,
+    rng: int = 2027,
+    confidence: float = 0.95,
+) -> tuple[float, float, float]:
+    a = np.asarray(a, dtype=float)
+    b = np.asarray(b, dtype=float)
+
+    if (
+        a.ndim != 1
+        or b.ndim != 1
+        or a.shape != b.shape
+        or a.size == 0
+    ):
+        raise ValueError(
+            "a and b must be non-empty, paired 1-D arrays"
+        )
+
+    if not (np.isfinite(a).all() and np.isfinite(b).all()):
+        raise ValueError("a and b must contain finite values")
+
+    if n_resamples <= 0 or not 0 < confidence < 1:
+        raise ValueError("invalid n_resamples or confidence")
+
+    if np.array_equal(a, b):
+        return 0.0, 0.0, 0.0
+
+    if a.size < 2:
+        raise ValueError(
+            "bootstrap requires at least two item pairs"
+        )
+
+    def difference(x, y, axis=-1):
+        return np.mean(x, axis=axis) - np.mean(y, axis=axis)
+
+    result = bootstrap(
+        (a, b),
+        difference,
+        paired=True,
+        vectorized=True,
+        n_resamples=n_resamples,
+        confidence_level=confidence,
+        method="percentile",
+        rng=np.random.default_rng(rng),
+    )
+
+    return (
+        float(difference(a, b)),
+        float(result.confidence_interval.low),
+        float(result.confidence_interval.high),
+    )
 
 
 def pass_at_k(n: int, c: int, k: int) -> float:
