@@ -1,0 +1,272 @@
+{
+  "status": "PASS",
+  "checked_at": "2026-11-18T12:44:24.184659+07:00",
+  "python": "/opt/miniconda3/envs/lab9/bin/python",
+  "python_version": "3.13.18",
+  "packages": {
+    "numpy": "2.5.5",
+    "scipy": "1.18.1",
+    "pydantic-evals": "2.68.0",
+    "pytest": "8.4.2"
+  },
+  "base_commit": "b57fed52559b930a789c6d83658ba5d9a98eedee",
+  "steps": [
+    {
+      "name": "smoke",
+      "command": "/opt/miniconda3/envs/lab9/bin/python -m lab9.smoke",
+      "cwd": "/Users/annnguy3n/Desktop/VinUni-AI20K-Labs/K5-L3B-DAY09-NguyenHuuAn-2A202604024-EvaluationandFailureAnalysis/src",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "passed": true,
+      "required_stdout_pattern": "^M0 PASS$",
+      "log": "src/reports/m4/smoke.txt"
+    },
+    {
+      "name": "pytest_core",
+      "command": "/opt/miniconda3/envs/lab9/bin/python -m pytest -q -m student -o addopts= -k 'lab9 and not advanced' --junitxml=reports/m4/pytest_core.xml",
+      "cwd": "/Users/annnguy3n/Desktop/VinUni-AI20K-Labs/K5-L3B-DAY09-NguyenHuuAn-2A202604024-EvaluationandFailureAnalysis/src",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "passed": true,
+      "log": "src/reports/m4/pytest_core.txt"
+    },
+    {
+      "name": "evalset_check",
+      "command": "/opt/miniconda3/envs/lab9/bin/python -m lab9.evalset --check",
+      "cwd": "/Users/annnguy3n/Desktop/VinUni-AI20K-Labs/K5-L3B-DAY09-NguyenHuuAn-2A202604024-EvaluationandFailureAnalysis/src",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "passed": true,
+      "required_stdout_pattern": "0 problem\\(s\\)",
+      "log": "src/reports/m4/evalset_check.txt"
+    },
+    {
+      "name": "baseline_v1",
+      "command": "/opt/miniconda3/envs/lab9/bin/python -m lab9.eval --shape swarm --spec config/metric_spec.yaml --out reports/baseline_v1.json",
+      "cwd": "/Users/annnguy3n/Desktop/VinUni-AI20K-Labs/K5-L3B-DAY09-NguyenHuuAn-2A202604024-EvaluationandFailureAnalysis/src",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "passed": true,
+      "log": "src/reports/m4/baseline_v1.txt"
+    },
+    {
+      "name": "eval_pr",
+      "command": "/opt/miniconda3/envs/lab9/bin/python -m lab9.eval --shape swarm --spec config/metric_spec.yaml --out reports/eval_pr.json",
+      "cwd": "/Users/annnguy3n/Desktop/VinUni-AI20K-Labs/K5-L3B-DAY09-NguyenHuuAn-2A202604024-EvaluationandFailureAnalysis/src",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "passed": true,
+      "log": "src/reports/m4/eval_pr.txt"
+    },
+    {
+      "name": "eval_fixed",
+      "command": "/opt/miniconda3/envs/lab9/bin/python -m lab9.eval --shape fixed --spec config/metric_spec.yaml --out reports/eval_fixed.json",
+      "cwd": "/Users/annnguy3n/Desktop/VinUni-AI20K-Labs/K5-L3B-DAY09-NguyenHuuAn-2A202604024-EvaluationandFailureAnalysis/src",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "passed": true,
+      "log": "src/reports/m4/eval_fixed.txt"
+    },
+    {
+      "name": "eval_seeded_regression",
+      "command": "/opt/miniconda3/envs/lab9/bin/python -m lab9.eval --shape seeded_regression --spec config/metric_spec.yaml --out reports/eval_seeded_regression.json",
+      "cwd": "/Users/annnguy3n/Desktop/VinUni-AI20K-Labs/K5-L3B-DAY09-NguyenHuuAn-2A202604024-EvaluationandFailureAnalysis/src",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "passed": true,
+      "log": "src/reports/m4/eval_seeded_regression.txt"
+    },
+    {
+      "name": "gate_baseline_self",
+      "command": "/opt/miniconda3/envs/lab9/bin/python -m lab9.gate --pr reports/baseline_v1.json --baseline reports/baseline_v1.json --spec config/metric_spec.yaml",
+      "cwd": "/Users/annnguy3n/Desktop/VinUni-AI20K-Labs/K5-L3B-DAY09-NguyenHuuAn-2A202604024-EvaluationandFailureAnalysis/src",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "passed": true,
+      "required_stdout_pattern": "^exit 0 — merge$",
+      "log": "src/reports/m4/gate_baseline_self.txt"
+    },
+    {
+      "name": "gate_pr",
+      "command": "/opt/miniconda3/envs/lab9/bin/python -m lab9.gate --pr reports/eval_pr.json --baseline reports/baseline_v1.json --spec config/metric_spec.yaml",
+      "cwd": "/Users/annnguy3n/Desktop/VinUni-AI20K-Labs/K5-L3B-DAY09-NguyenHuuAn-2A202604024-EvaluationandFailureAnalysis/src",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "passed": true,
+      "required_stdout_pattern": "^exit 0 — merge$",
+      "log": "src/reports/m4/gate_pr.txt"
+    },
+    {
+      "name": "ci_check",
+      "command": "/opt/miniconda3/envs/lab9/bin/python -m lab9.ci_check --pr reports/eval_pr.json --baseline reports/baseline_v1.json --spec config/metric_spec.yaml",
+      "cwd": "/Users/annnguy3n/Desktop/VinUni-AI20K-Labs/K5-L3B-DAY09-NguyenHuuAn-2A202604024-EvaluationandFailureAnalysis/src",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "passed": true,
+      "log": "src/reports/m4/ci_check.txt"
+    },
+    {
+      "name": "gate_fixed",
+      "command": "/opt/miniconda3/envs/lab9/bin/python -m lab9.gate --pr reports/eval_fixed.json --baseline reports/baseline_v1.json --spec config/metric_spec.yaml",
+      "cwd": "/Users/annnguy3n/Desktop/VinUni-AI20K-Labs/K5-L3B-DAY09-NguyenHuuAn-2A202604024-EvaluationandFailureAnalysis/src",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "passed": true,
+      "required_stdout_pattern": "^exit 0 — merge$",
+      "log": "src/reports/m4/gate_fixed.txt"
+    },
+    {
+      "name": "gate_seeded_regression",
+      "command": "/opt/miniconda3/envs/lab9/bin/python -m lab9.gate --pr reports/eval_seeded_regression.json --baseline reports/baseline_v1.json --spec config/metric_spec.yaml",
+      "cwd": "/Users/annnguy3n/Desktop/VinUni-AI20K-Labs/K5-L3B-DAY09-NguyenHuuAn-2A202604024-EvaluationandFailureAnalysis/src",
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "passed": true,
+      "required_stdout_pattern": "^exit 1 — blocked: ([^,]+, )*pass_rate(, |$)",
+      "log": "src/reports/m4/gate_seeded_regression.txt"
+    }
+  ],
+  "reports": {
+    "baseline_v1": {
+      "path": "src/reports/baseline_v1.json",
+      "run_id": "E-swarm-20261118-da70",
+      "shape": "swarm",
+      "rows": 70,
+      "unique_pairs": 70,
+      "eval_set_sha": "da70a29adb0a",
+      "evaluator_failures": 0,
+      "metrics": {
+        "approval_bypass": 0,
+        "secret_leak": 0,
+        "db_fact_kept": 0.9857,
+        "refund_amount_correct": 0.9857,
+        "pass_rate": 0.9857,
+        "reply_amount_matches_ledger": 1.0,
+        "proposal_amount_correct": 0.9857,
+        "pass_5": 0.9286,
+        "cost_per_success": 49.567
+      },
+      "pass_rate_comparison": {
+        "delta": 0.0,
+        "lo": 0.0,
+        "hi": 0.0
+      }
+    },
+    "eval_pr": {
+      "path": "src/reports/eval_pr.json",
+      "run_id": "E-swarm-20261118-da70",
+      "shape": "swarm",
+      "rows": 70,
+      "unique_pairs": 70,
+      "eval_set_sha": "da70a29adb0a",
+      "evaluator_failures": 0,
+      "metrics": {
+        "approval_bypass": 0,
+        "secret_leak": 0,
+        "db_fact_kept": 0.9857,
+        "refund_amount_correct": 0.9857,
+        "pass_rate": 0.9857,
+        "reply_amount_matches_ledger": 1.0,
+        "proposal_amount_correct": 0.9857,
+        "pass_5": 0.9286,
+        "cost_per_success": 49.567
+      },
+      "pass_rate_comparison": {
+        "delta": 0.0,
+        "lo": 0.0,
+        "hi": 0.0
+      }
+    },
+    "eval_fixed": {
+      "path": "src/reports/eval_fixed.json",
+      "run_id": "E-fixed-20261118-da70",
+      "shape": "fixed",
+      "rows": 70,
+      "unique_pairs": 70,
+      "eval_set_sha": "da70a29adb0a",
+      "evaluator_failures": 0,
+      "metrics": {
+        "approval_bypass": 0,
+        "secret_leak": 0,
+        "db_fact_kept": 1.0,
+        "refund_amount_correct": 1.0,
+        "pass_rate": 1.0,
+        "reply_amount_matches_ledger": 1.0,
+        "proposal_amount_correct": 1.0,
+        "pass_5": 1.0,
+        "cost_per_success": 48.7157
+      },
+      "pass_rate_comparison": {
+        "delta": 0.014285714285714235,
+        "lo": 0.0,
+        "hi": 0.042857142857142816
+      }
+    },
+    "eval_seeded_regression": {
+      "path": "src/reports/eval_seeded_regression.json",
+      "run_id": "E-seeded_regression-20261118-da70",
+      "shape": "seeded_regression",
+      "rows": 70,
+      "unique_pairs": 70,
+      "eval_set_sha": "da70a29adb0a",
+      "evaluator_failures": 0,
+      "metrics": {
+        "approval_bypass": 0,
+        "secret_leak": 0,
+        "db_fact_kept": 0.9286,
+        "refund_amount_correct": 0.8571,
+        "pass_rate": 0.7143,
+        "reply_amount_matches_ledger": 0.7857,
+        "proposal_amount_correct": 0.7857,
+        "pass_5": 0.7143,
+        "cost_per_success": 81.202
+      },
+      "pass_rate_comparison": {
+        "delta": -0.27142857142857146,
+        "lo": -0.5,
+        "hi": -0.05714285714285716
+      }
+    }
+  },
+  "harness_map": {
+    "version": "1.2",
+    "eval": {
+      "eval_set": "data/eval/eval_set_v1.jsonl",
+      "labels": "data/eval/labels_v1.json",
+      "metric_spec": "config/metric_spec.yaml",
+      "harness": "python -m lab9.eval",
+      "graders": "lab9.graders.GRADERS",
+      "judge_calibration": "python -m lab9.judge --csv data/eval/judge_tone_public.csv",
+      "gate": "python -m lab9.gate",
+      "baseline": "reports/baseline_v1.json",
+      "taxonomy": "docs/failure_taxonomy.md",
+      "eval_card": "docs/eval_card.md",
+      "gates": {
+        "kappa_min": 0.6,
+        "precision_min": 0.8,
+        "recall_min": 0.7,
+        "approval_bypass_max": 0,
+        "secret_leak_max": 0
+      }
+    }
+  },
+  "sha256": {
+    "src/lab9/stats.py": "41936825291ae343054d662ebfff0f80da56ba0a9500cd85b04c70c3a0c3b451",
+    "src/lab9/gate.py": "7d3c1e8c2aff2a0cb08d77348294cd57ccd82a58ffc8733ebdd3671ec139dd35",
+    "src/lab9/eval.py": "9b1e6c0e8c39955baf83afc74628a86f632fe880f090f85f1644a4d15fc5e6e5",
+    "src/lab9/ci_check.py": "531d9f85fc74753dc271069ca3028b252c40697a76e35945a3831a72e4e4c131",
+    "src/lab9/graders.py": "b8879538ccfb2ec64d6325773f117ebbf7f39329e5d74425d044c73b25366aa4",
+    "src/config/metric_spec.yaml": "b08db738718563b5c110de4ebbcbd70874f41aa26c960ef5047988b820c94972",
+    "src/harness_map.yaml": "8f47a632190a8d94555421e3fa7467ef8bea9eec553f556b4e8ff4a438986772",
+    "src/data/eval/eval_set_v1.jsonl": "da70a29adb0a9d368a47bd9128451a63a5952688a59cd4d94ebd10f48ce389cd",
+    "src/data/eval/labels_v1.json": "5c39cb2948732cbbc60384edca86e2fd90fbda587f672b31a6fc0b21040608aa",
+    "src/tests/test_lab9_stats.py": "f3f0d565bf5a52bc58059040bdc120138a3b07415d57e7a2356fe70f3c06a849",
+    "src/tests/test_lab9_gate.py": "1dfd26cd50df579012d16e022fcc4a606e370208dbb38475ce4dfbd887a906f4",
+    "src/scripts/verify_m4.py": "4d375ffde1fbb25b3050ba8af99d1e1737e8819ee00d5d8a475bae86f33e0b45",
+    "src/reports/baseline_v1.json": "ed7822d2577e2ce3661bb86a689e21354138b8e7912a03f8ded4b996c66c8ca4",
+    "src/reports/eval_pr.json": "ed7822d2577e2ce3661bb86a689e21354138b8e7912a03f8ded4b996c66c8ca4",
+    "src/reports/eval_fixed.json": "3dae80f315c66558e533b5e64948c906f24b936abab7f9b9e388c43a0d276e98",
+    "src/reports/eval_seeded_regression.json": "8fb98243e2c21e165947a509e03bb617298db1471aa2f4546a07afef0a49b062",
+    ".github/workflows/eval-gate.yml": "64f032b7340e6ffd99b291459ca39f3d8a6459646f2ccd1884d3163961605d56"
+  }
+}

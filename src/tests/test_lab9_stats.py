@@ -49,3 +49,33 @@ def test_paired_bootstrap_reference(stats):
 
 def test_paired_bootstrap_identical_is_zero(stats):
     assert stats.paired_bootstrap([1, 0, 1], [1, 0, 1]) == (0.0, 0.0, 0.0)
+
+
+def test_paired_bootstrap_preserves_item_pairs(stats):
+    # Every item improves by exactly 1. Independent resampling of a and b
+    # would invent variance from the much larger differences between items.
+    assert stats.paired_bootstrap([11, 21, 31, 41], [10, 20, 30, 40]) == (1.0, 1.0, 1.0)
+
+
+def test_paired_bootstrap_is_reproducible_with_custom_settings(stats):
+    a, b = [1, 0.8, 0.2, 1, 0.6], [0.8, 1, 0.4, 0.2, 0.6]
+    first = stats.paired_bootstrap(a, b, n_resamples=250, rng=19, confidence=0.9)
+    assert stats.paired_bootstrap(a, b, n_resamples=250, rng=19, confidence=0.9) == first
+    assert first[0] == pytest.approx(0.12)
+    assert first[1] <= first[0] <= first[2]
+
+
+@pytest.mark.parametrize(
+    "a,b",
+    [([], []), ([1, 0], [1]), ([[1, 0]], [[1, 0]]),
+     ([1, float("nan")], [1, 0]), ([1, 0], [1, float("inf")]), ([1], [0])],
+)
+def test_paired_bootstrap_rejects_unusable_pairs(stats, a, b):
+    with pytest.raises(ValueError):
+        stats.paired_bootstrap(a, b)
+
+
+@pytest.mark.parametrize("kwargs", [{"n_resamples": 0}, {"confidence": 0}, {"confidence": 1}])
+def test_paired_bootstrap_rejects_invalid_settings(stats, kwargs):
+    with pytest.raises(ValueError):
+        stats.paired_bootstrap([1, 0], [1, 0], **kwargs)
