@@ -30,6 +30,8 @@ Giảm có ý nghĩa khi cận trên CI 95% của Δ (PR − baseline) < 0. Boot
 
 M5 dùng [spec v2](../src/config/metric_spec_v2.yaml) trên 28 item × 5 seed, SHA `395c9495a572`, baseline `E-swarm-20261118-395c`. Em bổ sung slice blocking `money_movement`, `adversarial`, `denial`: pass_rate ≥0.90 và không giảm có ý nghĩa. Sàn toàn tập v2 là pass_rate ≥0.85, refund_amount_correct ≥0.90; FM-08 giữ ≥1.00.
 
+M6 tăng metric-spec lên **2.1**, giữ eval set v2 và thêm **pass_hat_5 ≥0.80, blocking**. A/A hai bộ seed cho pass^5 = 0.8929 và Δ = 0; em đặt sàn thấp hơn mức này. Khi dùng LLM thật cần đo nhiều lần A/A để tránh chặn nhầm do nhiễu.
+
 ## 3. Failure mode và grader
 
 | FM | Lỗi | Grader code / phép kiểm | Cơ sở lựa chọn |
@@ -59,10 +61,12 @@ Gate chặn regression ở `refund_amount_correct`, `pass_rate`, `reply_amount_m
 
 M5: baseline tự so, `fixed`, `honest_refactor` đều exit 0. `slice_regression` exit 1 tại `money_movement/pass_rate` (0.85 < 0.90), dù toàn tập đạt 0.9357. [Log M5](../src/reports/m5_validation.txt) lưu kết quả và 72 test pass trong conda `lab9`.
 
+M6: **17 test M6 pass**; `flaky_regression` có pass^5 = **0.5714**, bị chặn tại `pass_hat_5`. Baseline tự so, `fixed`, `honest_refactor` vẫn exit 0; mutation **3/3, 0 báo nhầm**. [Log M6](../src/reports/m6_validation.txt) lưu kết quả theo spec 2.1 và 2 test integrity M7 còn fail cục bộ.
+
 Nguyễn Hữu An chịu trách nhiệm phân tích khi gate exit 1, bổ sung regression test và chạy lại trước khi đề nghị merge. Không áp dụng waiver cho lỗi tiền/phê duyệt. Bài nộp cần PR `starter/d09` → `main` trong fork, output exit 1 của regression và CI xanh trên commit cuối; CI ở commit cũ chưa đáp ứng điều kiện này.
 
 ## 5. Giới hạn và phiên bản tiếp theo
 
-Kết quả chỉ dựa trên **MockLLM, 14 item v1 / 28 item v2 và judge replay**; chưa có dữ liệu người dùng thật hoặc held-out mới. CI rộng; parser reply chỉ hỗ trợ số tiền VND tường minh và không đo được reply thiếu event. M6/M7 chưa hoàn thành; pass@k/pass^k và integrity/ratchet chưa được kiểm chứng.
+Kết quả chỉ dựa trên **MockLLM, 14 item v1 / 28 item v2 và judge replay**; chưa có dữ liệu người dùng thật hoặc held-out mới. CI rộng; parser reply chỉ hỗ trợ số tiền VND tường minh và không đo được reply thiếu event. Năm seed chưa đủ phát hiện ổn định lỗi xác suất 1/3. M7 chưa hoàn thành; integrity/ratchet chưa được kiểm chứng.
 
 Thêm item/đổi nhãn: tăng eval-set version, sinh baseline mới. Đổi metric hoặc siết ngưỡng: tăng metric-spec version và đánh giá lại. Không nới ngưỡng trên cùng eval-set version. Điều kiện mở rộng thử nghiệm là có tập nhãn độc lập, reply coverage đầy đủ và bằng chứng trên model thật.
