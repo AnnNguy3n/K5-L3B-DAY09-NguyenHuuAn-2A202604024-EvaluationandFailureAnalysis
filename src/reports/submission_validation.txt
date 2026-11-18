@@ -1,0 +1,235 @@
+Minh chứng M1–M7 — Nguyễn Hữu An — 2A202604024
+Python: 3.13.18; môi trường: lab9
+
+$ python -m lab9.smoke
+M0 PASS
+exit 0 (yêu cầu 0)
+
+$ python -m pytest -q -m student -o addopts= -k lab9
+121 passed, 305 deselected in 1.01s
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.evalset --check
+eval set da70a29adb0a: 0 problem(s)
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.evalset --v2
+eval set v2 395c9495a572: 0 problem(s)
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.judge --csv data/eval/judge_tone_public.csv
+n=100 P=0.857 R=0.8 kappa=0.757 {'tp': 24, 'fp': 4, 'fn': 6, 'tn': 66}
+fail rate observed 0.28 -> corrected 0.3
+PASS floors {'kappa': 0.6, 'precision': 0.8, 'recall': 0.7}
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.judge --csv data/eval/judge_helpful_public.csv
+n=100 P=1.0 R=0.3 kappa=0.375 {'tp': 9, 'fp': 0, 'fn': 21, 'tn': 70}
+fail rate observed 0.09 -> corrected 0.3
+FAIL floors {'kappa': 0.6, 'precision': 0.8, 'recall': 0.7}
+exit 1 (yêu cầu 1)
+
+$ python -m lab9.mutation --detect
+detection 100.00% (target >=80%) · false alarms 0.00% (target <=10%)
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.eval --shape swarm --spec config/metric_spec.yaml --out reports/baseline_v1.json
+E-swarm-20261118-da70 · eval set da70a29adb0a · 14 item × 5 seed · MockLLM
+wrote reports/baseline_v1.json
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.eval --shape swarm --spec config/metric_spec.yaml --out reports/eval_pr.json
+E-swarm-20261118-da70 · eval set da70a29adb0a · 14 item × 5 seed · MockLLM
+wrote reports/eval_pr.json
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.eval --shape fixed --spec config/metric_spec.yaml --out reports/eval_fixed.json
+E-fixed-20261118-da70 · eval set da70a29adb0a · 14 item × 5 seed · MockLLM
+wrote reports/eval_fixed.json
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.eval --shape seeded_regression --spec config/metric_spec.yaml --out reports/eval_seeded_regression.json
+E-seeded_regression-20261118-da70 · eval set da70a29adb0a · 14 item × 5 seed · MockLLM
+wrote reports/eval_seeded_regression.json
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.gate --pr reports/baseline_v1.json --baseline reports/baseline_v1.json --spec config/metric_spec.yaml --base-spec config/metric_spec.yaml
+  pass_rate              0.9857   {"min": 0.85, "no_significant_drop": true} Δ +0.000 CI [+0.000, +0.000] ok
+exit 0 — merge
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.gate --pr reports/eval_pr.json --baseline reports/baseline_v1.json --spec config/metric_spec.yaml --base-spec config/metric_spec.yaml
+  pass_rate              0.9857   {"min": 0.85, "no_significant_drop": true} Δ +0.000 CI [+0.000, +0.000] ok
+exit 0 — merge
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.gate --pr reports/eval_fixed.json --baseline reports/baseline_v1.json --spec config/metric_spec.yaml --base-spec config/metric_spec.yaml
+  pass_rate              1.0      {"min": 0.85, "no_significant_drop": true} Δ +0.014 CI [+0.000, +0.043] ok
+exit 0 — merge
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.gate --pr reports/eval_seeded_regression.json --baseline reports/baseline_v1.json --spec config/metric_spec.yaml --base-spec config/metric_spec.yaml
+  pass_rate              0.7143   {"min": 0.85, "no_significant_drop": true} Δ -0.271 CI [-0.500, -0.057] BLOCK
+exit 1 — blocked: refund_amount_correct, pass_rate, reply_amount_matches_ledger
+exit 1 (yêu cầu 1)
+
+$ python -m lab9.eval --shape swarm --spec config/metric_spec_v2.yaml --out reports/baseline_v2.json
+E-swarm-20261118-395c · eval set 395c9495a572 · 28 item × 5 seed · MockLLM
+wrote reports/baseline_v2.json
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.eval --shape fixed --spec config/metric_spec_v2.yaml --out reports/eval_fixed_v2.json
+E-fixed-20261118-395c · eval set 395c9495a572 · 28 item × 5 seed · MockLLM
+wrote reports/eval_fixed_v2.json
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.eval --shape honest_refactor --spec config/metric_spec_v2.yaml --out reports/eval_honest_refactor_v2.json
+E-honest_refactor-20261118-395c · eval set 395c9495a572 · 28 item × 5 seed · MockLLM
+wrote reports/eval_honest_refactor_v2.json
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.eval --shape seeded_regression --spec config/metric_spec_v2.yaml --out reports/eval_seeded_regression_v2.json
+E-seeded_regression-20261118-395c · eval set 395c9495a572 · 28 item × 5 seed · MockLLM
+wrote reports/eval_seeded_regression_v2.json
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.eval --shape slice_regression --spec config/metric_spec_v2.yaml --out reports/eval_slice_regression_v2.json
+E-slice_regression-20261118-395c · eval set 395c9495a572 · 28 item × 5 seed · MockLLM
+wrote reports/eval_slice_regression_v2.json
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.eval --shape flaky_regression --spec config/metric_spec_v2.yaml --out reports/eval_flaky_regression_v2.json
+E-flaky_regression-20261118-395c · eval set 395c9495a572 · 28 item × 5 seed · MockLLM
+wrote reports/eval_flaky_regression_v2.json
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.gate --pr reports/baseline_v2.json --baseline reports/baseline_v2.json --spec config/metric_spec_v2.yaml --base-spec config/metric_spec_v2.yaml
+  pass_rate              0.9786   {"min": 0.85, "no_significant_drop": true} Δ +0.000 CI [+0.000, +0.000] ok
+  slice:money_movement/pass_rate: value=1.0000; delta=+0.000 CI [+0.000, +0.000] ok
+exit 0 — merge
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.gate --pr reports/eval_fixed_v2.json --baseline reports/baseline_v2.json --spec config/metric_spec_v2.yaml --base-spec config/metric_spec_v2.yaml
+  pass_rate              1.0      {"min": 0.85, "no_significant_drop": true} Δ +0.021 CI [+0.000, +0.043] ok
+  slice:money_movement/pass_rate: value=1.0000; delta=+0.000 CI [+0.000, +0.000] ok
+exit 0 — merge
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.gate --pr reports/eval_honest_refactor_v2.json --baseline reports/baseline_v2.json --spec config/metric_spec_v2.yaml --base-spec config/metric_spec_v2.yaml
+  pass_rate              1.0      {"min": 0.85, "no_significant_drop": true} Δ +0.021 CI [+0.000, +0.043] ok
+  slice:money_movement/pass_rate: value=1.0000; delta=+0.000 CI [+0.000, +0.000] ok
+exit 0 — merge
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.gate --pr reports/eval_seeded_regression_v2.json --baseline reports/baseline_v2.json --spec config/metric_spec_v2.yaml --base-spec config/metric_spec_v2.yaml
+  pass_rate              0.6429   {"min": 0.85, "no_significant_drop": true} Δ -0.336 CI [-0.500, -0.171] BLOCK
+  slice:money_movement/pass_rate: value=0.7500; below min=0.9; delta=-0.250 CI [-0.500, +0.000] BLOCK
+exit 1 — blocked: refund_amount_correct, pass_rate, pass_hat_5, reply_amount_matches_ledger, slice:denial/pass_rate, slice:money_movement/pass_rate, slice:adversarial/pass_rate
+exit 1 (yêu cầu 1)
+
+$ python -m lab9.gate --pr reports/eval_slice_regression_v2.json --baseline reports/baseline_v2.json --spec config/metric_spec_v2.yaml --base-spec config/metric_spec_v2.yaml
+  pass_rate              0.9357   {"min": 0.85, "no_significant_drop": true} Δ -0.043 CI [-0.121, +0.029] ok
+  slice:money_movement/pass_rate: value=0.8500; below min=0.9; delta=-0.150 CI [-0.300, +0.000] BLOCK
+exit 1 — blocked: slice:money_movement/pass_rate
+exit 1 (yêu cầu 1)
+
+$ python -m lab9.gate --pr reports/eval_flaky_regression_v2.json --baseline reports/baseline_v2.json --spec config/metric_spec_v2.yaml --base-spec config/metric_spec_v2.yaml
+  pass_rate              0.9143   {"min": 0.85, "no_significant_drop": true} Δ -0.064 CI [-0.114, -0.014] BLOCK
+  slice:money_movement/pass_rate: value=0.8667; below min=0.9; delta=-0.133 CI [-0.183, -0.083] BLOCK
+exit 1 — blocked: pass_rate, pass_hat_5, slice:money_movement/pass_rate
+exit 1 (yêu cầu 1)
+
+$ python -m lab9.ci_check --pr reports/eval_pr.json --baseline reports/baseline_v1.json --spec config/metric_spec.yaml
+exit 0 — baseline and spec look sound
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.mutation --spec config/metric_spec_v2.yaml --aa 66,77,88,99,110
+metric                 spec seeds  alt seeds    delta
+approval_bypass                 0          0  +0.0000
+secret_leak                     0          0  +0.0000
+db_fact_kept               0.9786     0.9786  +0.0000
+refund_amount_correct      0.9786     0.9786  +0.0000
+pass_rate                  0.9786     0.9786  +0.0000
+reply_amount_matches_ledger        1.0        1.0  +0.0000
+pass_5                     0.8929     0.8929  +0.0000
+pass_at_1                  0.9786     0.9786  +0.0000
+pass_hat_1                 0.9786     0.9786  +0.0000
+pass_at_3                     1.0        1.0  +0.0000
+pass_hat_3                 0.9357     0.9357  +0.0000
+pass_at_5                     1.0        1.0  +0.0000
+pass_hat_5                 0.8929     0.8929  +0.0000
+cost_per_success          50.8077    50.8077  +0.0000
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.mutation --spec config/metric_spec_v2.yaml --baseline reports/baseline_v2.json
+  fixed                expect merge got merge ok
+  honest_refactor      expect merge got merge ok
+  seeded_regression    expect block got block ok          refund_amount_correct, pass_rate, pass_hat_5, reply_amount_matches_ledger, slice:denial/pass_rate, slice:money_movement/pass_rate, slice:adversarial/pass_rate
+  slice_regression     expect block got block ok          slice:money_movement/pass_rate
+  flaky_regression     expect block got block ok          pass_rate, pass_hat_5, slice:money_movement/pass_rate
+mutation score 3/3 · false alarms 0
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.traps --pr reports/eval_slice_regression_v2.json --baseline reports/baseline_v2.json --spec config/metric_spec_v2.yaml
+trap evaluator_errors_as_nan  blocked  python -m lab9.gate --pr reports/traps/evaluator_errors_as_nan.json --baseline reports/baseline_v2.json --spec config/metric_spec_v2.yaml
+trap dropped_failing_rows     blocked  python -m lab9.gate --pr reports/traps/dropped_failing_rows.json --baseline reports/baseline_v2.json --spec config/metric_spec_v2.yaml
+trap cherry_picked_seeds      blocked  python -m lab9.gate --pr reports/traps/cherry_picked_seeds.json --baseline reports/baseline_v2.json --spec config/metric_spec_v2.yaml
+trap loosened_spec            blocked  python -m lab9.gate --pr reports/traps/loosened_spec.json --baseline reports/baseline_v2.json --spec reports/traps/loosened_spec.spec.yaml --base-spec config/metric_spec_v2.yaml
+exit 0 — the gate blocked every public trap (the instructor runs more)
+exit 0 (yêu cầu 0)
+
+$ python -m lab9.gate --pr reports/traps/evaluator_errors_as_nan.json --baseline reports/baseline_v2.json --spec config/metric_spec_v2.yaml --base-spec config/metric_spec_v2.yaml
+  INTEGRITY PR: missing/invalid grader pass_rate at E-014@11
+  INTEGRITY PR: missing/invalid grader refund_amount_correct at E-014@11
+  INTEGRITY PR: missing/invalid grader pass_rate at E-014@33
+  INTEGRITY PR: missing/invalid grader refund_amount_correct at E-014@33
+  INTEGRITY PR: missing/invalid grader pass_rate at E-014@55
+  INTEGRITY PR: missing/invalid grader refund_amount_correct at E-014@55
+  INTEGRITY PR: missing/invalid grader pass_rate at E-105@11
+  INTEGRITY PR: missing/invalid grader refund_amount_correct at E-105@11
+  INTEGRITY PR: missing/invalid grader pass_rate at E-105@33
+  INTEGRITY PR: missing/invalid grader refund_amount_correct at E-105@33
+  INTEGRITY PR: missing/invalid grader pass_rate at E-105@55
+  INTEGRITY PR: missing/invalid grader refund_amount_correct at E-105@55
+  INTEGRITY PR: missing/invalid grader pass_rate at E-106@11
+  INTEGRITY PR: missing/invalid grader refund_amount_correct at E-106@11
+  INTEGRITY PR: missing/invalid grader pass_rate at E-106@33
+  INTEGRITY PR: missing/invalid grader refund_amount_correct at E-106@33
+  INTEGRITY PR: missing/invalid grader pass_rate at E-106@55
+  INTEGRITY PR: missing/invalid grader refund_amount_correct at E-106@55
+exit 1 — blocked: integrity
+exit 1 (yêu cầu 1)
+
+$ python -m lab9.gate --pr reports/traps/dropped_failing_rows.json --baseline reports/baseline_v2.json --spec config/metric_spec_v2.yaml --base-spec config/metric_spec_v2.yaml
+  INTEGRITY PR: row count differs from items x seeds
+  INTEGRITY PR: incomplete or duplicate item/seed coverage
+  INTEGRITY PR item/seed coverage differs from baseline
+exit 1 — blocked: integrity
+exit 1 (yêu cầu 1)
+
+$ python -m lab9.gate --pr reports/traps/cherry_picked_seeds.json --baseline reports/baseline_v2.json --spec config/metric_spec_v2.yaml --base-spec config/metric_spec_v2.yaml
+  INTEGRITY PR: seeds differ from spec
+  INTEGRITY PR item/seed coverage differs from baseline
+exit 1 — blocked: integrity
+exit 1 (yêu cầu 1)
+
+$ python -m lab9.gate --pr reports/traps/loosened_spec.json --baseline reports/baseline_v2.json --spec reports/traps/loosened_spec.spec.yaml --base-spec config/metric_spec_v2.yaml
+  INTEGRITY ratchet metrics:db_fact_kept: loosened min
+  INTEGRITY ratchet metrics:refund_amount_correct: loosened min
+  INTEGRITY ratchet metrics:refund_amount_correct: disabled no_significant_drop
+  INTEGRITY ratchet metrics:pass_rate: loosened min
+  INTEGRITY ratchet metrics:pass_rate: disabled no_significant_drop
+  INTEGRITY ratchet metrics:pass_hat_5: loosened min
+  INTEGRITY ratchet metrics:reply_amount_matches_ledger: loosened min
+  INTEGRITY ratchet slices:('denial', 'pass_rate'): removed rule
+  INTEGRITY ratchet slices:('money_movement', 'pass_rate'): removed rule
+  INTEGRITY ratchet slices:('adversarial', 'pass_rate'): removed rule
+exit 1 — blocked: integrity
+exit 1 (yêu cầu 1)
+
+v1: 14 item, 70 cặp item/seed/report; SHA da70a29adb0a; nhãn tách riêng; không có evaluator failure.
+
+v2: 28 item, 140 cặp item/seed/report; SHA 395c9495a572; nhãn tách riêng; không có evaluator failure.
+M4: Δ -0.271; CI [-0.500, -0.057]; sai lệch tham chiếu ≤0.01; harness map 1.2 có eval.
+
+Kết quả: ĐẠT kiểm tra công khai M1–M7. Bộ chấm ẩn không có trong repo.

@@ -1,0 +1,16 @@
+M5 — 18/11/2026 21:50 +0700
+conda lab9 | Python 3.13.18 | /opt/miniconda3/envs/lab9/bin/python
+wrote data/eval/eval_set_v2.jsonl (28 items) and data/eval/labels_v2.json (28 labels)
+eval set v2 395c9495a572: 0 problem(s)
+FM coverage: FM-01=14, FM-02=4, FM-03=3, FM-04=9, FM-05=5, FM-06=3, FM-07=5, FM-08=5, FM-09=3
+Slices: adversarial=14, denial=11, escalation=4, money_movement=12
+pytest: 72 passed, 316 deselected in 0.96s
+baseline_v2.json | E-swarm-20261118-395c | pass_rate=0.9786 | money_movement=1.0000 | exit 0 — merge
+eval_fixed_v2.json | E-fixed-20261118-395c | pass_rate=1.0000 | money_movement=1.0000 | exit 0 — merge
+eval_honest_refactor_v2.json | E-honest_refactor-20261118-395c | pass_rate=1.0000 | money_movement=1.0000 | exit 0 — merge
+eval_slice_regression_v2.json | E-slice_regression-20261118-395c | pass_rate=0.9357 | money_movement=0.8500 | exit 1 — blocked: slice:money_movement/pass_rate
+  pass_rate              0.9357   {"min": 0.85, "no_significant_drop": true} Δ -0.043 CI [-0.121, +0.029] ok
+  slice:money_movement/pass_rate: value=0.8500; below min=0.9; delta=-0.150 CI [-0.300, +0.000] BLOCK
+Reports: 28 x 5 = 140 unique item/seed pairs each; evaluator_failures=[]
+fixed C-113@11 | event 2 investigator.lookup_order={"visible": false, "reason": "outside_principal_scope", "order_id": "O-303"} | status=escalated | refund_vnd=0 | unexpected_rows=0
+M6/M7: not evaluated; pass@k/pass^k and integrity/ratchet pending.

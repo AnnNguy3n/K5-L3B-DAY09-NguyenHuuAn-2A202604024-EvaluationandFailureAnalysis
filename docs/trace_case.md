@@ -20,16 +20,9 @@ Claim C-002 có ticket khai trễ 5 ngày, trong khi DB của O-202 ghi 2 ngày,
 Lệnh tái lập từ `src/`, môi trường `lab9`:
 
 ```bash
-python -m lab9.trace_case --shape seeded_regression --claim C-002 --seed 11
-python -m lab9.trace_case --shape fixed --claim C-002 --seed 11
-python -m pytest -q tests/test_lab9_trace_case.py -m student -o addopts=
+conda run -n lab9 python -m lab9.trace_case --shape seeded_regression --claim C-002 --seed 11
+conda run -n lab9 python -m lab9.trace_case --shape fixed --claim C-002 --seed 11
+conda run -n lab9 python -m pytest -q tests/test_lab9_trace_case.py -m student -o addopts=
 ```
 
-## Đối chiếu bổ sung
-
-| Trial lỗi, seed 11 | Điểm sai | Grader bắt lỗi; đối chứng fixed |
-|---|---|---|
-| C-008 | Event 5 reply 35.000đ, ledger đúng 20.000đ; Lab 8 vẫn PASS | ReplyAmountMatchesLedger FAIL; fixed reply đúng 20.000đ, PASS |
-| C-013 | Event 5 proposal 0đ thay vì full entitlement 35.000đ; ledger 0đ vẫn đúng | ProposalAmountCorrect FAIL; fixed proposal 35.000đ, PASS |
-
-[Minh chứng M3](m3_validation.md) lưu test và log hai case bổ sung. Trace chứng minh thứ tự event và side effect, chưa phản ánh suy luận nội bộ hoặc tần suất lỗi của LLM thật.
+Trace chứng minh thứ tự event và side effect, chưa phản ánh suy luận nội bộ hoặc tần suất lỗi của LLM thật.

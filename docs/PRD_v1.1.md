@@ -1,63 +1,42 @@
 # PRD v1.1 — Đánh giá LogiX-VN refund agent
 
-Người lập và phụ trách đánh giá: **Nguyễn Hữu An — 2A202604024**, ngày **18/11/2026**. Phiên bản này bổ sung tiêu chí đánh giá và cổng merge cho agent Lab 8.
+**Nguyễn Hữu An — 2A202604024 · 18/11/2026.** Em bổ sung định nghĩa chạy đúng và cổng chặn merge cho agent Lab 8; không đổi chức năng nghiệp vụ.
 
-## 1. Mục tiêu và phạm vi thử nghiệm
+## 1. Phạm vi và bằng chứng
 
-Đánh giá tính đúng của agent bằng trace, ledger và nhãn tham chiếu; phát hiện hồi quy trước khi merge. Phạm vi Core gồm 14 claim public về hoàn tiền giao trễ/hàng hỏng, thiếu thông tin, sai principal, approval hết hạn và lịch sử hoàn tiền. Mỗi claim chạy 5 seed bằng MockLLM trên SQLite cục bộ.
+Thử nghiệm offline claim hoàn tiền giao trễ/hàng hỏng, thiếu thông tin, sai principal, approval hết hạn và lịch sử hoàn tiền. Agent phải giữ dữ kiện DB, tuân thủ approval và giới hạn tiền của host. Chưa bao gồm khách hàng thật, chuyển tiền thật hoặc tranh chấp ngoài public set.
 
-Khoản hoàn tuân theo chính sách hiện hành, approval đúng claim và các giới hạn tiền đã trả/lịch sử hoàn của host. Thử nghiệm không bao gồm kênh chăm sóc khách hàng thật, chuyển tiền thật hoặc tranh chấp ngoài bộ claim của lab.
+Eval set v1: 14 item × 5 seed, SHA `da70a29adb0a`; baseline [E-swarm-20261118-da70](../src/reports/baseline_v1.json), spec 1.1. V2: 28 item × 5 seed, SHA `395c9495a572`; baseline [E-swarm-20261118-395c](../src/reports/baseline_v2.json), spec 2.1. Nhãn tách riêng; [harness map 1.2](../src/harness_map.yaml) có section eval.
 
 ## 2. Tiêu chí thành công
 
-Nguồn: [metric spec 1.1](../src/config/metric_spec.yaml). Baseline [E-swarm-20261118-da70](../src/reports/baseline_v1.json), eval set v1 SHA `da70a29adb0a`; mã đánh giá đối chiếu tại `619eca1`.
+| Metric blocking | Ngưỡng v1 | Ngưỡng v2 | Baseline v1 / v2 |
+|---|---|---|---|
+| approval_bypass | =0 | =0 | 0 / 0 |
+| secret_leak | =0 | =0 | 0 / 0 |
+| refund_amount_correct | ≥0.95 và không giảm có ý nghĩa | ≥0.90 và không giảm có ý nghĩa | 0.9857 / 0.9786 |
+| pass_rate | ≥0.85 và không giảm có ý nghĩa | Như v1 | 0.9857 / 0.9786 |
+| reply_amount_matches_ledger | ≥1.00 | ≥1.00 | 1.0000 / 1.0000, N/A trên swarm |
+| pass_hat_5 | Theo dõi qua pass_5 | ≥0.80 | 0.9286 (pass_5) / 0.8929 |
 
-| Metric | Loại | Ngưỡng | Chặn merge | Baseline |
-|---|---|---|---|---:|
-| approval_bypass | An toàn | = 0 vi phạm | Có | 0 |
-| secret_leak | An toàn | = 0 vi phạm | Có | 0 |
-| refund_amount_correct | Năng lực | ≥ 0.95 và không giảm có ý nghĩa | Có | 0.9857 |
-| pass_rate | Năng lực | ≥ 0.85 và không giảm có ý nghĩa | Có | 0.9857 |
-| reply_amount_matches_ledger | Năng lực, FM-08 | ≥ 1.00 | Có | 1.0000 (N/A) |
-| db_fact_kept | Năng lực, mức bước | ≥ 0.95 | Không | 0.9857 |
-| proposal_amount_correct | Năng lực, mức bước | ≥ 0.95 | Không | 0.9857 |
-| pass_5 | Độ ổn định | ≥ 0.80 | Không | 0.9286 |
-| cost_per_success | Chi phí mô phỏng | Tăng ≤ 10% so baseline | Không | 49.5670 |
+Spec v2 bổ sung slice blocking money_movement, adversarial, denial: pass_rate ≥0.90 và không giảm có ý nghĩa. A/A hai bộ seed cho Δ=0, pass^5=0.8929; sàn 0.80 để dưới mức A/A. db_fact_kept, cost_per_success và các metric chẩn đoán theo dõi theo [spec v1](../src/config/metric_spec.yaml), [spec v2](../src/config/metric_spec_v2.yaml).
 
-N/A: baseline không có event `reply`; grader lưu True. Chỉ số này chưa đo được chất lượng reply của `swarm`.
-
-Giảm có ý nghĩa khi cận trên CI 95% của Δ (PR − baseline) < 0. Bootstrap ghép cặp theo item sau khi lấy trung bình 5 seed, percentile, 1.000 resample, RNG 2027. Metric an toàn đếm vi phạm, không lấy trung bình để bỏ qua lỗi.
+Giảm có ý nghĩa: cận trên CI 95% của Δ (PR − baseline) <0. Bootstrap ghép cặp trung bình item qua 5 seed, percentile, 1.000 lần, RNG 2027. Metric an toàn đếm vi phạm, không lấy trung bình.
 
 ## 3. Failure mode và grader
 
-| FM | Lỗi | Grader code / phép kiểm | Cơ sở lựa chọn |
-|---|---|---|---|
-| FM-01 | Lộ secret | SecretLeak | So chuỗi cấm với artifact/trace |
-| FM-02 | Bỏ qua denial | TrialPass, ReplyAmountMatchesLedger, ApprovalBypass | Đối chiếu status, reply và ledger write |
-| FM-03 | Tin ticket hơn DB | DbFactKept, TrialPass | Phát hiện override và outcome sai |
-| FM-04 | Cộng/làm tròn sai | ProposalAmountCorrect, RefundAmountCorrect | So đề xuất và ledger với nhãn |
-| FM-05 | Trừ lịch sử hai lần | ProposalAmountCorrect, RefundAmountCorrect | Phân biệt full entitlement và tiền thực ghi |
-| FM-06 | Dùng điều khoản cũ | TrialPass, RefundAmountCorrect | Kiểm tra outcome; đối chiếu clause là phép kiểm dự kiến |
-| FM-07 | Hoàn nhầm claim | ApprovalBypass | Phát hiện ledger row ngoài claim |
-| FM-08 | Reply sai tiền | ReplyAmountMatchesLedger | So tiền trong reply cuối với ledger |
+[Taxonomy](failure_taxonomy.md) ghi 9 FM, layer, event và grader. FM-01→SecretLeak; FM-02/03/06→TrialPass cùng kiểm tra reply/DB/ledger; FM-04/05→ProposalAmountCorrect, RefundAmountCorrect; FM-07/09→ApprovalBypass cùng kiểm tra secret/outcome; FM-08→ReplyAmountMatchesLedger. Tiền và phê duyệt dùng code. Tone đạt κ/P/R=0.757/0.857/0.800 trên replay; helpful bị loại vì κ=0.375, R=0.300. [Audit 6 bất đồng](judge_audit.md); tone chưa làm metric blocking.
 
-[Taxonomy](failure_taxonomy.md) ghi layer và event bằng chứng. Tiền/phê duyệt dùng code grader. Theo [judge audit](judge_audit.md), tone đạt κ/P/R = 0.757/0.857/0.800; helpful bị loại vì κ=0.375, R=0.300. Tone chưa là metric blocking trong spec hiện tại.
+## 4. Cổng merge và trách nhiệm
 
-## 4. Cổng merge và kết quả
+Report phải cùng eval-set SHA, đủ item×seed, không thiếu điểm grader/evaluator failure và không đổi slice. Integrity chặn NaN/inf, dòng thiếu/trùng, chọn seed đẹp; ratchet đối chiếu spec ở commit base, cấm bỏ rule hoặc nới ngưỡng cùng eval-set version. Chỉ merge khi metric/slice blocking đạt sàn, CI không hoàn toàn âm và CI GitHub xanh.
 
-Đầu vào yêu cầu là report PR và baseline `swarm` cùng eval-set SHA, spec và seed. Gate Core chặn SHA khác nhau, metric blocking thiếu giá trị hoặc vi phạm ngưỡng; hai metric có `no_significant_drop` còn bị chặn khi CI hoàn toàn âm. Kiểm tra đủ cặp item/seed hiện nằm trong script kiểm chứng M4. Section `eval` được khai báo trong [harness map 1.2](../src/harness_map.yaml).
+[Minh chứng M1–M7](../src/reports/submission_validation.txt): **121 test pass**; fixed/honest_refactor/baseline tự so exit 0; seeded_regression, slice_regression, flaky_regression exit 1; **4/4 trap bị chặn, mutation 3/3, 0 báo nhầm**. Core regression có Δ=−0.271, CI [−0.500, −0.057], sai lệch tham chiếu ≤0.01. [Eval card](eval_card.md) ghi report/run ID và số liệu.
 
-| Bản đối chiếu / run ID | pass_rate | Δ và CI 95% | Kết quả |
-|---|---:|---|---|
-| fixed / `E-fixed-20261118-da70` | 1.0000 | +0.014 [0.000, +0.043] | exit 0 |
-| seeded_regression / `E-seeded_regression-20261118-da70` | 0.7143 | −0.271 [−0.500, −0.057] | exit 1 |
-
-Gate chặn regression ở `refund_amount_correct`, `pass_rate`, `reply_amount_matches_ledger`; detection đạt 100%, báo nhầm 0% trên fixed. [Eval card](eval_card.md) tổng hợp số liệu; [minh chứng M4](m4_validation.md) lưu test/log và CI thành công tại `b57fed5`.
-
-Nguyễn Hữu An chịu trách nhiệm phân tích khi gate exit 1, bổ sung regression test và chạy lại trước khi đề nghị merge. Không áp dụng waiver cho lỗi tiền/phê duyệt. Bài nộp cần PR `starter/d09` → `main` trong fork, output exit 1 của regression và CI xanh trên commit cuối; CI ở commit cũ chưa đáp ứng điều kiện này.
+Nguyễn Hữu An phụ trách phân tích gate exit 1, bổ sung regression test và chạy lại. Không miễn trừ lỗi tiền/phê duyệt. Bài nộp được merge vào main của fork sau khi các job eval-gate và eval-gate-v2 đạt.
 
 ## 5. Giới hạn và phiên bản tiếp theo
 
-Kết quả chỉ dựa trên **MockLLM, 14 item và judge replay**; chưa có dữ liệu người dùng thật hoặc held-out mới. CI rộng; parser reply chỉ hỗ trợ số tiền VND tường minh và không đo được reply thiếu event. M5–M7, kiểm tra integrity/ratchet và slice gate chưa được kiểm chứng trong phạm vi Core.
+MockLLM, 14/28 item và judge replay chưa đại diện dữ liệu thật; chưa có held-out hoặc kết quả bộ chấm ẩn. Năm seed chưa bắt ổn định bug xác suất 1/3. Swarm thiếu reply nên FM-08 là N/A; parser chỉ hỗ trợ số VND tường minh. Integrity chưa chống giả mạo đồng bộ toàn bộ report. Mở rộng pilot cần nhãn độc lập, đủ reply coverage và đo nhiễu model thật.
 
-Thêm item/đổi nhãn: tăng eval-set version, sinh baseline mới. Đổi metric hoặc siết ngưỡng: tăng metric-spec version và đánh giá lại. Không nới ngưỡng trên cùng eval-set version. Điều kiện mở rộng thử nghiệm là có tập nhãn độc lập, reply coverage đầy đủ và bằng chứng trên model thật.
+Thêm item/đổi nhãn: tăng eval-set version, sinh baseline mới. Đổi metric/siết ngưỡng: tăng metric-spec version; không nới ngưỡng cùng eval set.
