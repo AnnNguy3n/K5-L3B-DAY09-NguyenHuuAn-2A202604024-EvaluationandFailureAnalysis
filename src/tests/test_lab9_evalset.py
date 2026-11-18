@@ -57,3 +57,30 @@ def test_check_rejects_missing_tags(tmp_path, evalset_cli):
     result = evalset_cli("--check")
     assert result.returncode == 1, result.stdout + result.stderr
     assert "failure_modes empty" in result.stdout
+
+
+@pytest.mark.student
+def test_public_build_preserves_coverage_provenance_and_separate_labels(tmp_path, monkeypatch):
+    from lab9 import evalset
+
+    source = Path(__file__).resolve().parents[1] / "data/public_claims.jsonl"
+    claims = evalset.load_jsonl(source)
+    items_path, labels_path = tmp_path / "items.jsonl", tmp_path / "labels.json"
+    monkeypatch.setattr(evalset, "ITEMS", items_path)
+    monkeypatch.setattr(evalset, "LABELS", labels_path)
+
+    assert evalset.build(source) == (len(claims), len(claims))
+    first_build = (items_path.read_bytes(), labels_path.read_bytes())
+    evalset.build(source)
+    assert (items_path.read_bytes(), labels_path.read_bytes()) == first_build
+    assert evalset.check(items_path, labels_path) == []
+
+    items = evalset.load_jsonl(items_path)
+    labels = json.loads(labels_path.read_text(encoding="utf-8"))
+    assert {item["claim_id"] for item in items} == {claim["claim_id"] for claim in claims}
+    assert labels == {claim["claim_id"]: claim["expected"] for claim in claims}
+    for item, claim in zip(items, claims):
+        assert item["failure_modes"]
+        assert "expected" not in item and "label" not in item
+        assert item["provenance"]["matrix_id"] == claim["matrix_id"]
+        assert item["provenance"]["checked_by"]
