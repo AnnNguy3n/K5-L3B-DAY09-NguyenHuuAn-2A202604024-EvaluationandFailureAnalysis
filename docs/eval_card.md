@@ -1,81 +1,56 @@
 # Eval card — LogiX-VN refund agent
 
-Học viên: **Nguyễn Hữu An — 2A202604024**. Ngày báo cáo: **18/11/2026**. Phạm vi: M1–M6.
+**Nguyễn Hữu An — 2A202604024 · 18/11/2026 · M1–M7.** Em đánh giá offline bằng MockLLM, Python 3.13.18 trong conda `lab9`, pydantic-evals 2.68.0.
 
-## Phiên bản và dữ liệu
+## Dữ liệu và phiên bản
 
-- Mã đánh giá được đối chiếu tại commit `619eca1`; grader tại `3f06c48`; [metric spec 1.1](../src/config/metric_spec.yaml); harness map 1.2.
-- Eval set **v1**, SHA `da70a29adb0a`: 14 item từ `lab8_public`, nhãn tách trong `labels_v1.json`; 5 seed `11,22,33,44,55`, tổng **70 trial/report**.
-- Môi trường: MockLLM, SQLite cục bộ, Python 3.13.18, pydantic-evals 2.68.0. Các report có đủ 70 cặp item/seed và `evaluator_failures=[]`.
+| Eval set | SHA | Kích thước | Spec | Baseline / run ID |
+|---|---|---|---|---|
+| v1 | `da70a29adb0a` | 14 item × 5 seed = 70 trial | 1.1 | [baseline_v1](../src/reports/baseline_v1.json), `E-swarm-20261118-da70` |
+| v2 | `395c9495a572` | 28 item × 5 seed = 140 trial | 2.1 | [baseline_v2](../src/reports/baseline_v2.json), `E-swarm-20261118-395c` |
 
-## Metric, ngưỡng và kết quả
+Seed `11,22,33,44,55`; nhãn tách riêng. V2 giữ 14 item v1 và thêm 14 item adversarial; mỗi FM bị tấn công có ≥3 item. Harness map 1.2. Mã và dữ liệu được lưu cùng commit bài nộp; [log tái lập](../src/reports/submission_validation.txt) ghi đủ cặp item/seed và không có evaluator failure.
 
-Baseline: [E-swarm-20261118-da70](../src/reports/baseline_v1.json). Hai bản đối chiếu: [E-fixed-20261118-da70](../src/reports/eval_fixed.json) và [E-seeded_regression-20261118-da70](../src/reports/eval_seeded_regression.json).
+## Core — M1–M4
 
-| Metric | Ngưỡng | Blocking | Baseline | fixed | seeded_regression |
-|---|---|---|---:|---:|---:|
-| approval_bypass | = 0 vi phạm | Có | 0 | 0 | 0 |
-| secret_leak | = 0 vi phạm | Có | 0 | 0 | 0 |
-| refund_amount_correct | ≥ 0.95, không giảm có ý nghĩa | Có | 0.9857 | 1.0000 | 0.8571 |
-| pass_rate | ≥ 0.85, không giảm có ý nghĩa | Có | 0.9857 | 1.0000 | 0.7143 |
-| reply_amount_matches_ledger | ≥ 1.00 | Có | 1.0000 (N/A) | 1.0000 | 0.7857 |
-| db_fact_kept | ≥ 0.95 | Không | 0.9857 | 1.0000 | 0.9286 |
-| proposal_amount_correct | ≥ 0.95 | Không | 0.9857 | 1.0000 | 0.7857 |
-| pass_5 | ≥ 0.80 | Không | 0.9286 | 1.0000 | 0.7143 |
-| cost_per_success | Tăng ≤ 10% so baseline | Không | 49.5670 | 48.7157 | 81.2020 |
+[Taxonomy](failure_taxonomy.md) có 8 FM quan sát được, FM-09 với đối chứng chặn truy cập chéo principal và 5 trial công khai ghi bước sai đầu tiên. [Trace case](trace_case.md) C-002@11: event 3 ghi đè DB từ 2 thành 5 ngày; regression test đối chiếu ledger/status với `fixed`.
 
-N/A: trace `swarm` thiếu event `reply`; grader trả True với reason N/A. Giá trị 1.0 này không chứng minh reply đã được kiểm tra. Chi phí là ước tính mô phỏng.
+[Judge audit](judge_audit.md) có 6 bất đồng và đề xuất sửa rubric. Tone đạt κ/P/R = **0.757/0.857/0.800**; helpful **0.375/1.000/0.300**, bị loại. Tỷ lệ lỗi Rogan–Gladen là 0.300 trên cả hai tập replay. Tone chưa tích hợp làm metric blocking; tiền/phê duyệt chấm bằng code.
 
-Paired bootstrap lấy trung bình theo seed của từng item rồi resample 14 cặp item: percentile, 1.000 resample, RNG 2027, CI 95%; Δ = bản đối chiếu − baseline.
+| Metric blocking v1 | Ngưỡng | Baseline | fixed | seeded_regression |
+|---|---|---:|---:|---:|
+| approval_bypass | = 0 | 0 | 0 | 0 |
+| secret_leak | = 0 | 0 | 0 | 0 |
+| refund_amount_correct | ≥0.95, không giảm có ý nghĩa | 0.9857 | 1.0000 | 0.8571 |
+| pass_rate | ≥0.85, không giảm có ý nghĩa | 0.9857 | 1.0000 | 0.7143 |
+| reply_amount_matches_ledger | ≥1.00 | 1.0000 (N/A) | 1.0000 | 0.7857 |
 
-| Bản đối chiếu | Δ pass_rate | CI 95% | Gate |
-|---|---:|---|---|
-| swarm chạy lại / baseline tự so | 0.000 | [0.000, 0.000] | exit 0 |
-| fixed | +0.014 | [0.000, +0.043] | exit 0 |
-| seeded_regression | −0.271 | [−0.500, −0.057] | exit 1 |
+Metric theo dõi và ngưỡng đầy đủ nằm trong [spec v1](../src/config/metric_spec.yaml). Baseline thiếu event reply nên FM-08 trả True/N/A, chưa chứng minh reply được kiểm tra. [M3](m3_validation.md): detection **20/20 = 100%**, báo nhầm **0/70 = 0%**; grader proposal giải thích lỗi khi ledger cuối vẫn đúng.
 
-`seeded_regression` bị chặn ở `refund_amount_correct`, `pass_rate`, `reply_amount_matches_ledger`. Δ và CI của pass_rate lệch dưới 0.01 so với checkpoint. [Bằng chứng M4](m4_validation.md) ghi **65 test Core pass** và job `eval-gate` thành công ở commit `b57fed5`; đây không phải xác nhận CI cho commit nộp cuối.
+Bootstrap ghép cặp theo trung bình item qua seed: percentile, 1.000 resample, RNG 2027, CI 95%, Δ = PR − baseline. [fixed](../src/reports/eval_fixed.json), run `E-fixed-20261118-da70`: Δ **+0.014**, CI **[0.000, +0.043]**, exit 0. [seeded_regression](../src/reports/eval_seeded_regression.json), run `E-seeded_regression-20261118-da70`: Δ **−0.271**, CI **[−0.500, −0.057]**, exit 1 tại refund_amount_correct, pass_rate, FM-08; sai lệch tham chiếu ≤0.01.
 
-## M5 — Eval set v2 và slice gate
+## Advanced — M5–M6
 
-Em mở rộng lên **28 item × 5 seed = 140 trial/report**, SHA `395c9495a572`, [spec v2](../src/config/metric_spec_v2.yaml). V2 giữ 14 item v1, thêm 14 item adversarial; mỗi FM bị tấn công có ≥3 item. Slice lấy từ nhãn: `money_movement` 12 item, `adversarial` 14, `denial` 11; cùng sàn **0.90**, blocking và không giảm có ý nghĩa. Metric FM-08 giữ sàn 1.00.
+[Spec v2](../src/config/metric_spec_v2.yaml): pass_rate ≥0.85, refund_amount_correct ≥0.90, FM-08 ≥1.00; slice `money_movement`, `adversarial`, `denial` cùng sàn pass_rate ≥0.90, blocking và không giảm có ý nghĩa.
 
-| Report / run ID | pass_rate toàn tập | money_movement | Gate |
-|---|---:|---:|---|
-| [baseline](../src/reports/baseline_v2.json) / `E-swarm-20261118-395c` | 0.9786 | 1.0000 | exit 0, tự so |
-| [fixed](../src/reports/eval_fixed_v2.json) / `E-fixed-20261118-395c` | 1.0000 | 1.0000 | exit 0 |
-| [honest_refactor](../src/reports/eval_honest_refactor_v2.json) / `E-honest_refactor-20261118-395c` | 1.0000 | 1.0000 | exit 0 |
-| [slice_regression](../src/reports/eval_slice_regression_v2.json) / `E-slice_regression-20261118-395c` | 0.9357 | 0.8500 | exit 1 |
-
-Em kết luận điểm trung bình có thể che lỗi ở nhóm hoàn tiền: regression vẫn trên sàn toàn tập 0.85, CI Δ là [−0.121, +0.029]; riêng `money_movement` chỉ đạt 0.85 < 0.90. Gate chặn tại `slice:money_movement/pass_rate`; CI slice [−0.300, 0.000] chạm 0 nên sàn slice là điều kiện quyết định.
-
-Kiểm tra M5 bằng conda `lab9`: **72 test liên quan pass**, eval set 0 lỗi, mỗi report đủ 140 cặp item/seed và không có evaluator failure. [Log M5](../src/reports/m5_validation.txt) lưu kết quả tại thời điểm làm M5; các report v2 đã được sinh lại theo spec 2.1 ở M6.
-
-## M6 — Độ ổn định và nhiễu A/A
-
-Em cài pass@k/pass^k bằng estimator tổ hợp, tính theo từng item rồi lấy trung bình; từ chối đầu vào sai kiểu hoặc ngoài miền `n ≥ 1, 0 ≤ c ≤ n, 1 ≤ k ≤ n`. **17 test M6 pass**, gồm vector công khai, đối chiếu liệt kê tổ hợp, đầu vào sai và gate theo pass^5.
-
-A/A cùng `swarm` trên seed `11,22,33,44,55` và `66,77,88,99,110` cho **Δ = 0** ở mọi metric; pass^5 đều **0.8929**. Em chọn sàn blocking **0.80** trong spec **2.1**, thấp hơn mức A/A và đáp ứng rubric. Với LLM thật, kết quả có thể dao động dù agent không đổi; cần nhiều lần A/A để chọn sàn dưới miền dao động bình thường.
-
-| Report / run ID | pass_rate | pass@5 | pass^5 | Gate |
+| Report v2 / run ID | pass_rate | pass^5 | money_movement | Gate |
 |---|---:|---:|---:|---|
-| baseline / `E-swarm-20261118-395c` | 0.9786 | 1.0000 | 0.8929 | exit 0, tự so |
-| fixed / `E-fixed-20261118-395c` | 1.0000 | 1.0000 | 1.0000 | exit 0 |
-| honest_refactor / `E-honest_refactor-20261118-395c` | 1.0000 | 1.0000 | 1.0000 | exit 0 |
-| [flaky_regression](../src/reports/eval_flaky_regression_v2.json) / `E-flaky_regression-20261118-395c` | 0.9143 | 1.0000 | 0.5714 | exit 1 |
+| baseline / `E-swarm-20261118-395c` | 0.9786 | 0.8929 | 1.0000 | exit 0, tự so |
+| [fixed](../src/reports/eval_fixed_v2.json) / `E-fixed-20261118-395c` | 1.0000 | 1.0000 | 1.0000 | exit 0 |
+| [honest_refactor](../src/reports/eval_honest_refactor_v2.json) / `E-honest_refactor-20261118-395c` | 1.0000 | 1.0000 | 1.0000 | exit 0 |
+| [slice_regression](../src/reports/eval_slice_regression_v2.json) / `E-slice_regression-20261118-395c` | 0.9357 | 0.8929 | 0.8500 | exit 1, slice money_movement |
+| [flaky_regression](../src/reports/eval_flaky_regression_v2.json) / `E-flaky_regression-20261118-395c` | 0.9143 | 0.5714 | 0.8667 | exit 1, gồm pass_hat_5 |
 
-`flaky_regression` bị chặn tại `pass_hat_5` (0.5714 < 0.80), đồng thời tại `pass_rate` và slice `money_movement`. Mutation đạt **3/3, 0 báo nhầm**. [Log M6](../src/reports/m6_validation.txt) ghi **89 test pass**, A/A và gate; **2 test integrity M7 còn fail**, chưa có kết luận CI v2 xanh. Năm seed chưa đủ phát hiện ổn định lỗi có xác suất 1/3; hai bộ seed MockLLM chưa ước lượng được nhiễu LLM thật.
+Slice regression vẫn trên sàn toàn tập, CI Δ **[−0.121, +0.029]**; riêng money_movement đạt 0.85 <0.90, CI slice **[−0.300, 0.000]**. Sàn slice quyết định việc chặn.
 
-## Judge và phân tích lỗi
+Em tính pass@k/pass^k bằng estimator tổ hợp từng item, kiểm tra miền đầu vào. A/A với seed `66,77,88,99,110` cho **Δ=0** ở mọi metric, pass^5 cùng **0.8929**. Em chọn **pass_hat_5 ≥0.80, blocking**, thấp hơn mức A/A. Với LLM thật cần nhiều lần A/A để đặt sàn dưới miền dao động bình thường.
 
-- `tone_ok`: κ=0.757, P=0.857, R=0.800, đạt calibration; `helpful`: κ=0.375, P=1.000, R=0.300, bị loại khỏi gate. Tone chỉ được chấp nhận trong phạm vi replay, chưa tích hợp làm metric blocking. [Judge audit](judge_audit.md).
-- Taxonomy có 8 FM có bằng chứng lỗi và FM-09 với đối chứng chặn truy cập chéo principal ở M5. Detection M3 **20/20 = 100%**, báo nhầm **0/70 = 0%**. [Bằng chứng M3](m3_validation.md).
-- [Trace case C-002@11](trace_case.md): event 3 ghi đè DB từ 2 thành 5 ngày; assertion status/ledger không thỏa trên `seeded_regression` và thỏa trên `fixed`.
+## Expert — M7
 
-## Phạm vi, trách nhiệm và giới hạn
+Em bổ sung integrity cho NaN/inf, điểm grader thiếu, evaluator failure, dòng thiếu/trùng, item/seed và slice bị thay đổi; ratchet chặn bỏ rule, tắt blocking/CI hoặc nới ngưỡng trên cùng eval-set version. **4/4 trap công khai đều gate exit 1, INTEGRITY**; baseline tự so exit 0; mutation **3/3, 0 báo nhầm**. Test bổ sung kiểm tra dòng trùng và evaluator failure dù aggregate vẫn xanh. [Minh chứng cuối](../src/reports/submission_validation.txt): **121 test pass**; script tái lập là [verify_submission.py](../src/scripts/verify_submission.py).
 
-Thử nghiệm offline trên claim hoàn tiền giao trễ/hàng hỏng trong public set, theo đúng principal, chính sách và approval của host. Chưa triển khai cho khách hàng hoặc chuyển tiền thật. Nguyễn Hữu An phụ trách gate: xử lý lỗi, chạy lại eval và chỉ đề nghị merge khi gate đạt; không miễn trừ lỗi tiền/phê duyệt.
+## Trách nhiệm và giới hạn
 
-MockLLM, **14 item v1 / 28 item v2** và **judge replay công khai** chưa đại diện cho LLM hoặc người dùng thật; CI còn rộng, chưa có held-out độc lập. M5–M6 đã kiểm tra trên variant công khai; integrity/ratchet M7 chưa hoàn thành. FM-08 mới xử lý số tiền VND tường minh trong mẫu reply của lab.
+Nguyễn Hữu An phụ trách gate, phân tích lỗi và chạy lại trước merge; không miễn trừ lỗi tiền/phê duyệt. Phạm vi pilot là claim public về giao trễ/hàng hỏng, đúng principal và approval; chưa chuyển tiền hoặc phục vụ khách hàng thật.
 
-Thêm/đổi item hoặc nhãn cần tăng eval-set version và sinh baseline mới. Đổi metric hoặc siết ngưỡng cần tăng metric-spec version; cùng eval-set version chỉ được siết ngưỡng.
+MockLLM, **14 item v1 / 28 item v2**, judge replay công khai và 5 seed chưa đại diện cho model/người dùng thật. Chưa có held-out; bộ chấm ẩn không có trong repo. Bug xác suất 1/3 chưa được phát hiện ổn định với 5 seed. Parser FM-08 chỉ hỗ trợ tiền VND tường minh; integrity chưa chứng minh report không bị giả mạo đồng bộ toàn bộ dữ liệu. Thêm item/đổi nhãn cần tăng eval-set version và sinh baseline mới; đổi metric/siết ngưỡng cần tăng metric-spec version.

@@ -11,11 +11,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
+from collections import Counter
 from pathlib import Path
 
 from lab8.console import utf8_stdio
 from lab9 import stats
 from lab9.eval import SPEC, load_spec, per_item
+from lab9.graders import GRADERS
 
 
 def integrity_check(pr: dict, base: dict, spec: dict, base_spec: dict | None = None) -> list[str]:
@@ -33,8 +36,108 @@ def integrity_check(pr: dict, base: dict, spec: dict, base_spec: dict | None = N
         including dropping no_significant_drop)
       - an item's slice tags in PR rows differ from the baseline's (relabelling an item out of a
         slice hides its regression from the slice gate)"""
-    # TODO M7
-    return []
+    problems = []
+    coverage, tags = {}, {}
+    graded = {m["id"] for m in spec["metrics"] if m["id"] in GRADERS}
+
+    for name, report in (("PR", pr), ("baseline", base)):
+        manifest = report.get("manifest")
+        rows, metrics = report.get("rows"), report.get("metrics")
+        if not isinstance(manifest, dict) or not isinstance(rows, list) or not isinstance(metrics, dict):
+            problems.append(f"{name}: malformed manifest/rows/metrics")
+            continue
+        if not manifest.get("eval_set_sha"):
+            problems.append(f"{name}: missing eval_set_sha")
+        items, seeds = manifest.get("items"), manifest.get("seeds")
+        if (type(items) is not int or items < 1 or not isinstance(seeds, list)
+                or not seeds or any(type(s) is not int for s in seeds)):
+            problems.append(f"{name}: invalid item count or seeds")
+            continue
+        if len(set(seeds)) != len(seeds):
+            problems.append(f"{name}: duplicate manifest seeds")
+        if len(rows) != items * len(seeds):
+            problems.append(f"{name}: row count differs from items x seeds")
+        if "seeds" in spec and set(seeds) != set(spec["seeds"]):
+            problems.append(f"{name}: seeds differ from spec")
+        if report.get("evaluator_failures", []) != []:
+            problems.append(f"{name}: evaluator_failures present")
+        for mid, value in metrics.items():
+            # None remains a missing aggregate verdict in check(); it is never
+            # allowed for a per-trial grader result below.
+            if value is not None and (not isinstance(value, (int, float)) or not math.isfinite(value)):
+                problems.append(f"{name}: non-finite or non-numeric metric {mid}")
+
+        pairs, item_tags = Counter(), {}
+        for row in rows:
+            if (not isinstance(row, dict) or not isinstance(row.get("item_id"), str)
+                    or type(row.get("seed")) is not int):
+                problems.append(f"{name}: malformed item/seed row")
+                continue
+            item, seed = row["item_id"], row["seed"]
+            pairs[item, seed] += 1
+            slices = row.get("slices", [])
+            if not isinstance(slices, list) or any(not isinstance(s, str) for s in slices):
+                problems.append(f"{name}: invalid slices for {item}")
+            else:
+                row_tags = frozenset(slices)
+                if item in item_tags and item_tags[item] != row_tags:
+                    problems.append(f"{name}: inconsistent slice tags for {item}")
+                item_tags[item] = row_tags
+            for mid in graded:
+                value = row.get(mid)
+                if (value is None or not isinstance(value, (bool, int, float))
+                        or not math.isfinite(value) or value not in (0, 1)):
+                    problems.append(f"{name}: missing/invalid grader {mid} at {item}@{seed}")
+
+        item_ids = {item for item, _ in pairs}
+        expected = {(item, seed) for item in item_ids for seed in seeds}
+        if (len(item_ids) != items or set(pairs) != expected
+                or any(count != 1 for count in pairs.values())):
+            problems.append(f"{name}: incomplete or duplicate item/seed coverage")
+        coverage[name], tags[name] = pairs, item_tags
+
+    if coverage.get("PR") != coverage.get("baseline"):
+        problems.append("PR item/seed coverage differs from baseline")
+    if tags.get("PR") != tags.get("baseline"):
+        problems.append("PR item slice tags differ from baseline")
+
+    if base_spec is not None and spec.get("eval_set_version") == base_spec.get("eval_set_version"):
+        problems.extend(_ratchet_problems(spec, base_spec))
+    return list(dict.fromkeys(problems))
+
+
+def _ratchet_problems(spec: dict, base_spec: dict) -> list[str]:
+    """Compare rules by identity, allowing additions and tighter thresholds."""
+    problems = []
+    for section in ("metrics", "slices"):
+        def key(rule):
+            return rule["id"] if section == "metrics" else (rule["name"], rule["metric"])
+
+        current = {key(rule): rule for rule in spec.get(section, [])}
+        if len(current) != len(spec.get(section, [])):
+            problems.append(f"ratchet: duplicate {section} rules")
+        for old in base_spec.get(section, []):
+            identity = key(old)
+            new = current.get(identity)
+            label = f"ratchet {section}:{identity}"
+            if new is None:
+                problems.append(f"{label}: removed rule")
+                continue
+            if old.get("blocking") and not new.get("blocking"):
+                problems.append(f"{label}: disabled blocking")
+            before = old.get("threshold", {}) if section == "metrics" else old
+            after = new.get("threshold", {}) if section == "metrics" else new
+            for field in ("min", "max", "max_increase"):
+                if field not in before:
+                    continue
+                value = after.get(field)
+                if not isinstance(value, (int, float)) or not math.isfinite(value):
+                    problems.append(f"{label}: removed/invalid {field}")
+                elif (field == "min" and value < before[field]) or (field != "min" and value > before[field]):
+                    problems.append(f"{label}: loosened {field}")
+            if before.get("no_significant_drop") and not after.get("no_significant_drop"):
+                problems.append(f"{label}: disabled no_significant_drop")
+    return problems
 
 
 def slice_check(
@@ -97,11 +200,11 @@ def slice_check(
 
 
 def check(pr: dict, base: dict, spec: dict, base_spec: dict | None = None) -> tuple[list[str], list[str]]:
-    if pr["manifest"]["eval_set_sha"] != base["manifest"]["eval_set_sha"]:
-        return ["eval_set_sha"], ["  EVAL SET differs from the baseline's: re-run the baseline on the same eval set"]
     problems = integrity_check(pr, base, spec, base_spec)
     if problems:
         return ["integrity"], [f"  INTEGRITY {p}" for p in problems]
+    if pr["manifest"]["eval_set_sha"] != base["manifest"]["eval_set_sha"]:
+        return ["eval_set_sha"], ["  EVAL SET differs from the baseline's: re-run the baseline on the same eval set"]
     blocked, lines = [], []
     bs = spec.get("bootstrap", {})
     for m in spec["metrics"]:

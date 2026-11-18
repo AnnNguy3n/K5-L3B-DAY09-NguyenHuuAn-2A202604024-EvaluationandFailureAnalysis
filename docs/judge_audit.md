@@ -22,7 +22,7 @@ Tỷ lệ hiệu chỉnh khớp 30/100 nhãn human trên cùng tập; kết qu�
 
 ## Audit 6 bất đồng
 
-Audit dựa trên reply và ghi chú CSV, có hỗ trợ Codex; nhãn gốc giữ nguyên, không tạo nhãn người mới. Thông tin ledger/ticket bên dưới lấy từ ghi chú dataset.
+Em đối chiếu reply và ghi chú CSV; giữ nguyên nhãn public, không tạo nhãn người mới. Thông tin ledger/ticket lấy từ ghi chú dataset.
 
 | Case | Judge | Human | Kết luận và bằng chứng | Điều chỉnh rubric đề xuất |
 |---|---|---|---|---|
@@ -35,13 +35,13 @@ Audit dựa trên reply và ghi chú CSV, có hỗ trợ Codex; nhãn gốc gi�
 
 ## Minh chứng và giới hạn
 
-[Log M2](evidence/m2_verification.txt) lưu snapshot tại thời điểm chạy: **17 test pass**, tone exit 0, helpful exit 1; hai test bootstrap thuộc M4 chưa được chọn. Các đề xuất rubric chưa được đánh giá lại bằng judge mới.
+[Log kiểm chứng cuối](../src/reports/submission_validation.txt): tone exit 0, helpful exit 1; test thống kê/calibration nằm trong 121 test đạt. [Log M2 cũ](evidence/m2_verification.txt) lưu lần kiểm tra ban đầu. Các đề xuất rubric chưa được đánh giá lại bằng judge mới.
 
 Lệnh tái lập từ `src/`, môi trường `lab9`:
 
 ```bash
-python -m lab9.judge --csv data/eval/judge_tone_public.csv --audit 10
-python -m lab9.judge --csv data/eval/judge_helpful_public.csv --audit 5
+conda run -n lab9 python -m lab9.judge --csv data/eval/judge_tone_public.csv --audit 10
+conda run -n lab9 python -m lab9.judge --csv data/eval/judge_helpful_public.csv --audit 5
 ```
 
 Judge replay công khai chưa có held-out độc lập hoặc nhãn người mới. Tone chưa được tích hợp làm metric blocking; helpful không đủ điều kiện dùng cho gate. Tiền và phê duyệt được chấm bằng code.
