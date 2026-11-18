@@ -1,0 +1,93 @@
+M2 verification — generated automatically; do not hand-edit
+Generated at: 2026-11-18T11:27:57+07:00
+Working directory: /Users/annnguy3n/Desktop/VinUni-AI20K-Labs/K5-L3B-DAY09-NguyenHuuAn-2A202604024-EvaluationandFailureAnalysis/src
+Interpreter: /opt/miniconda3/envs/lab9/bin/python
+Conda environment: lab9
+Python: 3.13.18 | packaged by Anaconda, Inc. | (main, Oct 27 2026, 00:49:14) [Clang 20.1.8 ]
+Git branch: starter/d09
+Git HEAD (working tree contains M2 changes): 7678a2d47b5676778c7b0d5a23046fd6df6ae903
+pytest: 8.4.2
+pydantic-evals: 2.68.0
+numpy: 2.5.5
+scipy: 1.18.1
+PyYAML: 6.0.3
+
+SHA-256 of verified files:
+fa6a79132dc83c071014d1112d26e061e01c28ea9a89ac67fe2996b16882a2ca  src/lab9/stats.py
+5e9db0c3336803fc49d56178bdb52813f7350f58f71a4610271cc3378a2620b6  src/lab9/judge.py
+f918930fdf2d8430fb752107a794ac8e677fd722a18a77666eaa90d4a46b433a  src/tests/test_lab9_stats.py
+46efc1e0625e6cc2d1c502b169eae9b37ae96ae050f477228676f7657d20196a  src/tests/test_lab9_judge.py
+716e3dc3b39477542ddde8c8a88c3169895b1b4c33dc71e9dc17ba0f5118b421  src/data/eval/judge_tone_public.csv
+670c133b2f56d9f86bfea070d020474187459623205a5a1a5490b44504f756eb  src/data/eval/judge_helpful_public.csv
+14ca9d57a4c4b2e744fc76f54208d30c9adc1aa316604b9215fad1d38b89bc07  docs/judge_audit.md
+
+$ /opt/miniconda3/envs/lab9/bin/python -m lab9.smoke
+Expected exit: 0
+stdout:
+ok   import pydantic_evals
+ok   import scipy
+ok   import numpy
+ok   import yaml
+ok   import lab8.benchmark
+ok   file data/public_claims.jsonl
+ok   file config/metric_spec.yaml
+ok   file data/eval/judge_tone_public.csv
+M0 PASS
+stderr:
+(empty)
+Actual exit: 0
+
+$ /opt/miniconda3/envs/lab9/bin/python -m pytest -q tests/test_lab9_stats.py tests/test_lab9_judge.py -m student -o addopts= -k 'not paired_bootstrap'
+Expected exit: 0
+stdout:
+.................                                                        [100%]
+17 passed, 2 deselected in 0.02s
+stderr:
+(empty)
+Actual exit: 0
+
+$ /opt/miniconda3/envs/lab9/bin/python -m lab9.judge --csv data/eval/judge_tone_public.csv --audit 10
+Expected exit: 0
+stdout:
+n=100 P=0.857 R=0.8 kappa=0.757 {'tp': 24, 'fp': 4, 'fn': 6, 'tn': 66}
+fail rate observed 0.28 -> corrected 0.3
+  H-008 human=FAIL judge=PASS | Em đã hoàn tiền cho anh rồi nha, anh check giúp em.
+  H-017 human=FAIL judge=PASS | Dạ, bạn ơi LogiX đã hoàn 25.000đ cho đơn O-606 rồi nha.
+  H-029 human=FAIL judge=PASS | Dạ, vui lòng chờ. Hệ thống đang xử lý, không cần nhắn thêm.
+  H-042 human=PASS judge=FAIL | Dạ, đơn O-808 đã hoàn 120.000đ. Tiền về trong 3–5 ngày ạ.
+  H-051 human=PASS judge=FAIL | Dạ, LogiX đã refund 90.000đ cho đơn O-202 ạ.
+  H-063 human=FAIL judge=PASS | Dạ, LogiX đã hoàn 20.000đ và sẽ hoàn thêm cho anh/chị ạ.
+  H-070 human=FAIL judge=PASS | Dạ, LogiX đã hoàn 90.000đ cho đơn O-909 ạ 😂😂
+  H-081 human=PASS judge=FAIL | Dạ, đơn O-107 chưa đủ điều kiện hoàn theo chính sách hiện hành ạ.
+  H-088 human=PASS judge=FAIL | Dạ, dạ, LogiX đã hoàn 40.000đ cho đơn O-233 ạ.
+  H-094 human=FAIL judge=PASS | Da, LogiX da hoan 40.000đ cho don O-341, xin loi vi su bat tien.
+PASS floors {'kappa': 0.6, 'precision': 0.8, 'recall': 0.7}
+stderr:
+(empty)
+Actual exit: 0
+
+$ /opt/miniconda3/envs/lab9/bin/python -m lab9.judge --csv data/eval/judge_helpful_public.csv --audit 5
+Expected exit: 1
+stdout:
+n=100 P=1.0 R=0.3 kappa=0.375 {'tp': 9, 'fp': 0, 'fn': 21, 'tn': 70}
+fail rate observed 0.09 -> corrected 0.3
+  HL-015 human=FAIL judge=PASS | Dạ, LogiX đã hoàn 55.000đ cho đơn O-112 ạ.
+  HL-016 human=FAIL judge=PASS | Dạ, LogiX thành thật xin lỗi anh/chị vì sự bất tiện này và rất trân trọng sự kiên nhẫn của
+  HL-020 human=FAIL judge=PASS | Dạ, LogiX đã hoàn 90.000đ cho đơn O-303 ạ.
+  HL-028 human=FAIL judge=PASS | Dạ, LogiX thành thật xin lỗi anh/chị vì sự bất tiện này và rất trân trọng sự kiên nhẫn của
+  HL-035 human=FAIL judge=PASS | Dạ, Một lần nữa LogiX xin lỗi vì trải nghiệm chưa tốt, mong anh/chị thông cảm và tiếp tục
+FAIL floors {'kappa': 0.6, 'precision': 0.8, 'recall': 0.7}
+stderr:
+(empty)
+Actual exit: 1
+
+$ git diff --check
+Expected exit: 0
+stdout:
+(empty)
+stderr:
+(empty)
+Actual exit: 0
+
+M4 paired_bootstrap tests were deselected; this is an M2-only verification.
+All checks matched expected exits: True
