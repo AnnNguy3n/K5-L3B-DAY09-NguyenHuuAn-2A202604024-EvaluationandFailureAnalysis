@@ -37,15 +37,63 @@ def integrity_check(pr: dict, base: dict, spec: dict, base_spec: dict | None = N
     return []
 
 
-def slice_check(pr: dict, base: dict, spec: dict) -> tuple[list[str], list[str]]:
-    """M5 (Advanced): an average can hide a regression on a small, important slice.
-    For each entry of spec["slices"] ({"name", "metric", "min"?, "no_significant_drop"?, "blocking"}):
-      - value = mean of per_item(pr, metric, slice_name=name)
-      - fail if below "min", or if no_significant_drop and the paired CI over the slice's items
-        lies entirely below 0
-    Return (blocked ids like "slice:money_movement/pass_rate", report lines)."""
-    # TODO M5
-    return [], []
+def slice_check(
+    pr: dict, base: dict, spec: dict
+) -> tuple[list[str], list[str]]:
+    """Apply each slice's floor and paired CI to aligned per-item seed means."""
+    blocked, lines = [], []
+    bootstrap = spec.get("bootstrap", {})
+
+    for rule in spec.get("slices", []):
+        name, metric = rule["name"], rule["metric"]
+        mid = f"slice:{name}/{metric}"
+
+        a = per_item(pr, metric, slice_name=name)
+        b = per_item(base, metric, slice_name=name)
+        failed, notes = False, []
+
+        if not a or a.keys() != b.keys():
+            failed = True
+            notes.append("missing or unmatched slice items")
+        else:
+            keys = sorted(a)
+            value = sum(a.values()) / len(a)
+            notes.append(f"value={value:.4f}")
+
+            if "min" in rule and value < rule["min"]:
+                failed = True
+                notes.append(f"below min={rule['min']}")
+
+            if rule.get("no_significant_drop"):
+                try:
+                    delta, lo, hi = stats.paired_bootstrap(
+                        [a[k] for k in keys],
+                        [b[k] for k in keys],
+                        n_resamples=bootstrap.get("n_resamples", 1000),
+                        rng=bootstrap.get("rng", 2027),
+                        confidence=bootstrap.get("confidence", 0.95),
+                    )
+                    notes.append(
+                        f"delta={delta:+.3f} "
+                        f"CI [{lo:+.3f}, {hi:+.3f}]"
+                    )
+                    failed = failed or hi < 0
+                except ValueError as exc:
+                    failed = True
+                    notes.append(f"CI unavailable: {exc}")
+
+        blocking = rule.get("blocking", False)
+        if failed and blocking:
+            blocked.append(mid)
+
+        verdict = (
+            "BLOCK" if failed and blocking
+            else "warn" if failed
+            else "ok"
+        )
+        lines.append(f"  {mid}: {'; '.join(notes)} {verdict}")
+
+    return blocked, lines
 
 
 def check(pr: dict, base: dict, spec: dict, base_spec: dict | None = None) -> tuple[list[str], list[str]]:

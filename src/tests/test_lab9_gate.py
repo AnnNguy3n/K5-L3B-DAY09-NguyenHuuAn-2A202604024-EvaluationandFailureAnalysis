@@ -96,3 +96,47 @@ def test_gate_reports_a_missing_blocking_metric(spec):
     blocked, lines = gate.check(pr, base, spec)
     assert blocked == ["pass_rate"]
     assert "MISSING" in lines[0]
+
+
+def slice_report(pass_counts):
+    out = report(pass_counts)
+    for row in out["rows"]:
+        row["slices"] = ["money_movement"]
+    return out
+
+
+@pytest.fixture
+def slice_spec():
+    return {"bootstrap": {"n_resamples": 1000, "rng": 2027, "confidence": 0.95},
+            "slices": [{"name": "money_movement", "metric": "pass_rate", "min": 0.75,
+                        "no_significant_drop": True, "blocking": True}]}
+
+
+@pytest.mark.parametrize("counts,blocking,want", [
+    ([4, 4, 4, 4], True, ["slice:money_movement/pass_rate"]),  # Above floor, CI wholly negative.
+    ([4, 5, 5, 5], True, []),  # Above floor, CI touches zero.
+    ([0, 0, 5, 5], False, []),  # A monitoring slice cannot block merge.
+])
+def test_slice_ci_and_blocking_policy(slice_spec, counts, blocking, want):
+    slice_spec["slices"][0]["blocking"] = blocking
+    blocked, lines = gate.slice_check(slice_report(counts), slice_report([5] * 4), slice_spec)
+    assert blocked == want
+    if not blocking:
+        assert lines[0].endswith("warn")
+
+
+def test_slice_ignores_unrelated_failures_and_row_order(slice_spec):
+    base, pr = slice_report([5] * 4), slice_report([5, 5, 0, 0])
+    for rep in (base, pr):
+        for row in rep["rows"]:
+            if row["item_id"] in {"E-003", "E-004"}:
+                row["slices"] = []
+    pr["rows"].reverse()
+    assert gate.slice_check(pr, base, slice_spec)[0] == []
+
+
+@pytest.mark.parametrize("keep", [set(), {"E-002", "E-003", "E-004"}])
+def test_slice_refuses_empty_or_unpaired_items(slice_spec, keep):
+    base, pr = slice_report([5] * 4), slice_report([5] * 4)
+    pr["rows"] = [row for row in pr["rows"] if row["item_id"] in keep]
+    assert gate.slice_check(pr, base, slice_spec)[0] == ["slice:money_movement/pass_rate"]

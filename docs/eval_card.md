@@ -1,6 +1,6 @@
 # Eval card — LogiX-VN refund agent
 
-Học viên: **Nguyễn Hữu An — 2A202604024**. Ngày báo cáo: **18/11/2026**. Phạm vi: Core M1–M4.
+Học viên: **Nguyễn Hữu An — 2A202604024**. Ngày báo cáo: **18/11/2026**. Phạm vi: Core M1–M4 và M5.
 
 ## Phiên bản và dữ liệu
 
@@ -36,16 +36,31 @@ Paired bootstrap lấy trung bình theo seed của từng item rồi resample 14
 
 `seeded_regression` bị chặn ở `refund_amount_correct`, `pass_rate`, `reply_amount_matches_ledger`. Δ và CI của pass_rate lệch dưới 0.01 so với checkpoint. [Bằng chứng M4](m4_validation.md) ghi **65 test Core pass** và job `eval-gate` thành công ở commit `b57fed5`; đây không phải xác nhận CI cho commit nộp cuối.
 
+## M5 — Eval set v2 và slice gate
+
+Em mở rộng lên **28 item × 5 seed = 140 trial/report**, SHA `395c9495a572`, [spec 2.0](../src/config/metric_spec_v2.yaml). V2 giữ 14 item v1, thêm 14 item adversarial; mỗi FM bị tấn công có ≥3 item. Slice lấy từ nhãn: `money_movement` 12 item, `adversarial` 14, `denial` 11; cùng sàn **0.90**, blocking và không giảm có ý nghĩa. Metric FM-08 giữ sàn 1.00.
+
+| Report / run ID | pass_rate toàn tập | money_movement | Gate |
+|---|---:|---:|---|
+| [baseline](../src/reports/baseline_v2.json) / `E-swarm-20261118-395c` | 0.9786 | 1.0000 | exit 0, tự so |
+| [fixed](../src/reports/eval_fixed_v2.json) / `E-fixed-20261118-395c` | 1.0000 | 1.0000 | exit 0 |
+| [honest_refactor](../src/reports/eval_honest_refactor_v2.json) / `E-honest_refactor-20261118-395c` | 1.0000 | 1.0000 | exit 0 |
+| [slice_regression](../src/reports/eval_slice_regression_v2.json) / `E-slice_regression-20261118-395c` | 0.9357 | 0.8500 | exit 1 |
+
+Em kết luận điểm trung bình có thể che lỗi ở nhóm hoàn tiền: regression vẫn trên sàn toàn tập 0.85, CI Δ là [−0.121, +0.029]; riêng `money_movement` chỉ đạt 0.85 < 0.90. Gate chặn tại `slice:money_movement/pass_rate`; CI slice [−0.300, 0.000] chạm 0 nên sàn slice là điều kiện quyết định.
+
+Kiểm tra bằng conda `lab9`: **72 test liên quan pass**, eval set 0 lỗi, mỗi report đủ 140 cặp item/seed và không có evaluator failure. [Log M5](../src/reports/m5_validation.txt). M6/M7 chưa hoàn thành: pass@k/pass^k còn null, integrity/ratchet chưa cài; chưa có kết luận CI v2 xanh.
+
 ## Judge và phân tích lỗi
 
 - `tone_ok`: κ=0.757, P=0.857, R=0.800, đạt calibration; `helpful`: κ=0.375, P=1.000, R=0.300, bị loại khỏi gate. Tone chỉ được chấp nhận trong phạm vi replay, chưa tích hợp làm metric blocking. [Judge audit](judge_audit.md).
-- Taxonomy có 8 FM có bằng chứng trace. Detection **20/20 = 100%**, báo nhầm **0/70 = 0%**. [Bằng chứng M3](m3_validation.md).
+- Taxonomy có 8 FM có bằng chứng lỗi và FM-09 với đối chứng chặn truy cập chéo principal ở M5. Detection M3 **20/20 = 100%**, báo nhầm **0/70 = 0%**. [Bằng chứng M3](m3_validation.md).
 - [Trace case C-002@11](trace_case.md): event 3 ghi đè DB từ 2 thành 5 ngày; assertion status/ledger không thỏa trên `seeded_regression` và thỏa trên `fixed`.
 
 ## Phạm vi, trách nhiệm và giới hạn
 
 Thử nghiệm offline trên claim hoàn tiền giao trễ/hàng hỏng trong public set, theo đúng principal, chính sách và approval của host. Chưa triển khai cho khách hàng hoặc chuyển tiền thật. Nguyễn Hữu An phụ trách gate: xử lý lỗi, chạy lại eval và chỉ đề nghị merge khi gate đạt; không miễn trừ lỗi tiền/phê duyệt.
 
-MockLLM, **14 item** và **judge replay công khai** chưa đại diện cho LLM hoặc người dùng thật; CI còn rộng, chưa có held-out độc lập. M5–M7 chưa được kiểm chứng; gate Core chưa có kiểm tra slice, integrity và ratchet đầy đủ. FM-08 mới xử lý số tiền VND tường minh trong mẫu reply của lab.
+MockLLM, **14 item v1 / 28 item v2** và **judge replay công khai** chưa đại diện cho LLM hoặc người dùng thật; CI còn rộng, chưa có held-out độc lập. M5 đã kiểm tra slice trên variant công khai; M6/M7 còn thiếu. FM-08 mới xử lý số tiền VND tường minh trong mẫu reply của lab.
 
 Thêm/đổi item hoặc nhãn cần tăng eval-set version và sinh baseline mới. Đổi metric hoặc siết ngưỡng cần tăng metric-spec version; cùng eval-set version chỉ được siết ngưỡng.
