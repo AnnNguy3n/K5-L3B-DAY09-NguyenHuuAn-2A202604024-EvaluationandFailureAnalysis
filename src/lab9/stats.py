@@ -7,10 +7,10 @@ Reference values to self-check are in tests/test_lab9_stats.py.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 import numpy as np
 from scipy.stats import bootstrap
-
-from collections.abc import Sequence
 
 POS = "FAIL"   # the judge's job is to FIND failures, so FAIL is the positive class
 
@@ -112,6 +112,13 @@ def paired_bootstrap(
     rng: int = 2027,
     confidence: float = 0.95,
 ) -> tuple[float, float, float]:
+    """Return PR-minus-baseline mean and a paired percentile bootstrap interval.
+
+    Each pair is the same item's mean over seeds, in the same order. Resample
+    item pairs together, rather than treating individual seed runs as independent.
+    Identical inputs return an exact zero interval. Reject unusable input instead
+    of letting missing or non-finite observations silently affect a gate decision.
+    """
     a = np.asarray(a, dtype=float)
     b = np.asarray(b, dtype=float)
 

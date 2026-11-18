@@ -1,0 +1,8 @@
+$ /opt/miniconda3/envs/lab9/bin/python -m lab9.ci_check --pr reports/eval_pr.json --baseline reports/baseline_v1.json --spec config/metric_spec.yaml
+cwd: /Users/annnguy3n/Desktop/VinUni-AI20K-Labs/K5-L3B-DAY09-NguyenHuuAn-2A202604024-EvaluationandFailureAnalysis/src
+
+exit 0 — baseline and spec look sound
+
+STDERR:
+
+exit_code=0; expected=0

@@ -1,0 +1,10 @@
+$ /opt/miniconda3/envs/lab9/bin/python -m pytest -q -m student -o addopts= -k 'lab9 and not advanced' --junitxml=reports/m4/pytest_core.xml
+cwd: /Users/annnguy3n/Desktop/VinUni-AI20K-Labs/K5-L3B-DAY09-NguyenHuuAn-2A202604024-EvaluationandFailureAnalysis/src
+
+.................................................................        [100%]
+- generated xml file: /Users/annnguy3n/Desktop/VinUni-AI20K-Labs/K5-L3B-DAY09-NguyenHuuAn-2A202604024-EvaluationandFailureAnalysis/src/reports/m4/pytest_core.xml -
+65 passed, 317 deselected in 0.92s
+
+STDERR:
+
+exit_code=0; expected=0

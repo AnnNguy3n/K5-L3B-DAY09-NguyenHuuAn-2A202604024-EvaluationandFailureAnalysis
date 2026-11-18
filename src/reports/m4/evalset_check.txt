@@ -1,0 +1,8 @@
+$ /opt/miniconda3/envs/lab9/bin/python -m lab9.evalset --check
+cwd: /Users/annnguy3n/Desktop/VinUni-AI20K-Labs/K5-L3B-DAY09-NguyenHuuAn-2A202604024-EvaluationandFailureAnalysis/src
+
+eval set da70a29adb0a: 0 problem(s)
+
+STDERR:
+
+exit_code=0; expected=0
