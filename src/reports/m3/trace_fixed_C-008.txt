@@ -1,0 +1,11 @@
+== fixed C-008@11  lab8 grader: PASS (ok)
+-- trace (step, kind, payload)
+   1 handoff            {"task": "check_applicable_policy", "max_output_tokens": 400, "allowed_tools": ["lookup_order", "lookup_policy
+   2 investigator       {"lookup_order": {"visible": true, "reason": "ok", "order": {"order_id": "O-808", "status": "delivered_late", 
+   3 quote              {"amount_vnd": 35000, "reason": "entitled", "clause_ids": ["SHIP-LATE-03"], "parts": {"SHIP-LATE-03": 35000}}
+   4 reply              {"text": "Dạ, LogiX đã hoàn 20.000đ cho đơn O-808."}
+-- ledger vs label
+  refund_vnd     ledger=20000    label=20000
+  refund_count   ledger=1        label=1
+  status         result=resolved label=resolved
+  unexpected ledger rows: 0

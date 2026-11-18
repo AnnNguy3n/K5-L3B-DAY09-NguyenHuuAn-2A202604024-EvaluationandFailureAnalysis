@@ -14,7 +14,7 @@ Lệnh in ra ba phần: các event trong trace (`reply`, `decision`, `model_over
 
 | Trường | Nội dung |
 |---|---|
-| Trial | `seeded_regression C-002@11`, run ID trace `R-seeded_regression-C-002-s11`. Report evaluation tổng và run ID `E-...` sẽ được sinh ở M4 sau khi hoàn thành grader M3. |
+| Trial | `seeded_regression C-002@11`, run ID trace `R-seeded_regression-C-002-s11`. Report M3: `E-seeded_regression-20261118-da70`, lưu tại `src/reports/m3/eval_seeded_regression.json`; baseline và paired gate thuộc M4. |
 | Triệu chứng | Grader Lab 8 FAIL với `status resolved != denied`; proposal và ledger 20.000đ thay vì 0đ; event 6 reply báo đã hoàn 20.000đ. |
 | Bước sai đầu tiên | **Event 3**, `model_override {"delay_days": 5}`. |
 | Vì sao là bước *đầu tiên* | Event 1 handoff giới hạn phạm vi claim và tool hợp lệ; event 2 investigator lấy đúng O-202 với DB `delay_days=2`. Event 3 mới ghi đè dữ liệu đó theo ticket; event 4 quote 20.000đ là hậu quả của việc ghi đè. |
@@ -38,6 +38,15 @@ Assertion outcome dùng chung là status phải bằng label `denied` và `refun
 # Chạy từ src/ trong conda lab9
 python -m pytest -q tests/test_lab9_trace_case.py -m student -o addopts=
 ```
+
+## Đối chứng bổ sung ở M3
+
+| Trial | Bước sai và dữ liệu | Assertion bắt lỗi |
+|---|---|---|
+| `seeded_regression C-008@11` | Event 5 `reply` nói đã hoàn 35.000đ; ledger và label đều 20.000đ; grader Lab 8 vẫn PASS. `fixed` có event 4 reply đúng 20.000đ. | `ReplyAmountMatchesLedger`: FAIL trên bản lỗi, PASS trên `fixed`. Test `test_isolated_misreport_with_correct_ledger` còn cô lập cùng lỗi bằng shape chỉ bật `misreport`. |
+| `seeded_regression C-013@11` | Event 3 quote đúng 35.000đ, event 4 đọc lịch sử đã hoàn 35.000đ; event 5 tự giảm proposal về 0đ. Label proposal vẫn 35.000đ để host xử lý lịch sử; ledger cuối 0đ và status `denied` đều đúng. `fixed` giữ proposal 35.000đ. | `ProposalAmountCorrect`: FAIL trên bản lỗi, PASS trên `fixed`; test `test_c013_wrong_proposal_with_correct_final_ledger`. Grader ledger vẫn PASS, cho thấy chỉ kiểm outcome sẽ bỏ sót bước sai này. |
+
+Log CLI của cả hai shape/case được sinh trong `src/reports/m3/trace_<shape>_<claim>.txt`. [Bằng chứng M3](m3_validation.md) ghi kết quả test và report tổng; các test integration dùng MockLLM, SQLite và trace thật của harness.
 
 ## Quy tắc
 
